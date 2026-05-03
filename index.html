@@ -813,12 +813,15 @@
     </div>
   </div>
 
-<script>
+  <script>
 // ⚠️ SUBSTITUA pela URL do seu Web App (após publicar o Code.gs)
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycby9UZmQcl9kFDmnmAlY9bnTD4dEv8h4LCi99F8Jz42YiDZm12Xjk_07ajrwJwnCW74KhQ/exec";
 const API_KEY = "2026Plenitude360$";
 const EVALUATOR_BASE_URL = "https://amavroger-hue.github.io/Avaliador2/";
 const MIN_EVALUATORS = 3;
+
+// 🎨 Ativa labels DENTRO dos gráficos (premium!)
+if (window.ChartDataLabels) Chart.register(window.ChartDataLabels);
 
 // 🏛️ COMPETÊNCIAS PLENITUDE IEC™ (3 PILARES × 8 COMPETÊNCIAS)
 const competencies = [
@@ -1308,7 +1311,6 @@ function renderDashboardCharts() {
 }
 
 function getCompetencyAverages(source) {
-  // source: array de 48 respostas OU array de objetos { responses: [...] }
   return competencies.map(comp => {
     const indices = questions.map((q, idx) => q.c === comp.id ? idx : -1).filter(i => i !== -1);
     let allValues = [];
@@ -1377,7 +1379,8 @@ function renderDashRadar() {
               return ` ${ctx.dataset.label}: ${val.toFixed(1)} — ${niveis[Math.round(val)] || '—'}`;
             }
           }
-        }
+        },
+        datalabels: { display: false }
       },
       scales: {
         r: {
@@ -1396,7 +1399,6 @@ function renderDashDonut() {
   if (!ctx) return;
   if (donutChartInstance) donutChartInstance.destroy();
 
-  // Calcular média por pilar (combinando self + avaliadores)
   const allResp = [];
   if (dashboardData.selfAssessment?.responses) allResp.push({ responses: dashboardData.selfAssessment.responses });
   if (dashboardData.evaluations) allResp.push(...dashboardData.evaluations);
@@ -1432,14 +1434,195 @@ function renderDashDonut() {
         tooltip: {
           backgroundColor: 'rgba(6,59,122,0.95)',
           callbacks: { label: function(ctx) { return ` ${ctx.label}: ${ctx.raw.toFixed(2)} / 5.0`; } }
-        }
+        },
+        datalabels: { display: false }
       }
     }
   });
 }
 
 // ═══════════════════════════════════════════════════════
-// 📄 GERAÇÃO DO PDF — RELATÓRIO PLENITUDE IEC™
+// 🎨 GERADOR DE GRÁFICOS PREMIUM PARA PDF (off-screen)
+// ═══════════════════════════════════════════════════════
+async function gerarGraficoPremium(tipo, dados, opcoes = {}) {
+  return new Promise((resolve) => {
+    const wrapper = document.createElement('div');
+    wrapper.style.cssText = 'position:fixed;left:-9999px;top:-9999px;width:800px;height:600px;background:#fff;';
+    const canvas = document.createElement('canvas');
+    canvas.width = 800;
+    canvas.height = 600;
+    wrapper.appendChild(canvas);
+    document.body.appendChild(wrapper);
+
+    const config = {
+      type: tipo,
+      data: dados,
+      options: {
+        responsive: false,
+        maintainAspectRatio: false,
+        animation: { duration: 0 },
+        devicePixelRatio: 2,
+        ...opcoes
+      }
+    };
+
+    const chart = new Chart(canvas, config);
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        const img = canvas.toDataURL('image/png', 1.0);
+        chart.destroy();
+        document.body.removeChild(wrapper);
+        resolve(img);
+      });
+    });
+  });
+}
+
+// 🍩 Gráfico DOUGHNUT Premium dos 3 Pilares
+async function gerarGraficoPilaresPDF(allResp) {
+  const pillars = ['CARÁTER', 'COMPETÊNCIA', 'COMUNHÃO'];
+  const pillarAvgs = pillars.map(p => {
+    const compIds = competencies.filter(c => c.pillar === p).map(c => c.id);
+    const indices = questions.map((q, idx) => compIds.includes(q.c) ? idx : -1).filter(i => i !== -1);
+    let values = [];
+    allResp.forEach(item => {
+      if (item.responses) indices.forEach(idx => { if (item.responses[idx]) values.push(item.responses[idx]); });
+    });
+    return values.length ? parseFloat((values.reduce((a, b) => a + b, 0) / values.length).toFixed(2)) : 0;
+  });
+
+  return await gerarGraficoPremium('doughnut', {
+    labels: ['CARÁTER', 'COMPETÊNCIA', 'COMUNHÃO'],
+    datasets: [{
+      data: pillarAvgs,
+      backgroundColor: ['#cc0000', '#005ce6', '#0891b2'],
+      borderColor: '#fff',
+      borderWidth: 4,
+      hoverOffset: 0
+    }]
+  }, {
+    cutout: '55%',
+    plugins: {
+      legend: {
+        position: 'bottom',
+        labels: { font: { size: 14, weight: 'bold' }, color: '#063b7a', padding: 18, boxWidth: 18 }
+      },
+      title: {
+        display: true,
+        text: ['Distribuição dos Pilares Cruciformes', `Média Geral: ${(pillarAvgs.reduce((a,b)=>a+b,0)/3).toFixed(2)} / 5.00`],
+        font: { size: 16, weight: 'bold' },
+        color: '#063b7a',
+        padding: { top: 10, bottom: 20 }
+      },
+      datalabels: {
+        color: '#fff',
+        font: { size: 18, weight: 'bold' },
+        formatter: (v) => v.toFixed(1)
+      }
+    }
+  });
+}
+
+// 🎯 Gráfico RADAR Premium (Auto vs Avaliadores)
+async function gerarGraficoRadarPDF(selfData, evalData, temAvaliadores) {
+  const datasets = [{
+    label: 'Sua autopercepção',
+    data: selfData,
+    backgroundColor: 'rgba(11,99,206,0.25)',
+    borderColor: '#0b63ce',
+    borderWidth: 3,
+    pointBackgroundColor: '#0b63ce',
+    pointRadius: 6,
+    pointBorderColor: '#fff',
+    pointBorderWidth: 2
+  }];
+
+  if (temAvaliadores) {
+    datasets.push({
+      label: 'Percepção dos Avaliadores',
+      data: evalData,
+      backgroundColor: 'rgba(16,185,129,0.25)',
+      borderColor: '#10b981',
+      borderWidth: 3,
+      pointBackgroundColor: '#10b981',
+      pointRadius: 6,
+      pointBorderColor: '#fff',
+      pointBorderWidth: 2
+    });
+  }
+
+  return await gerarGraficoPremium('radar', {
+    labels: competencies.map(c => c.name.replace(/[^\w\sÀ-ÿ]/g, '').trim()),
+    datasets
+  }, {
+    plugins: {
+      legend: {
+        position: 'bottom',
+        labels: { font: { size: 14, weight: 'bold' }, color: '#063b7a', padding: 16 }
+      },
+      title: {
+        display: true,
+        text: 'Espelho 360° — As 8 Competências',
+        font: { size: 16, weight: 'bold' },
+        color: '#063b7a',
+        padding: { top: 10, bottom: 20 }
+      },
+      datalabels: { display: false }
+    },
+    scales: {
+      r: {
+        beginAtZero: true, min: 0, max: 5,
+        ticks: { stepSize: 1, font: { size: 11, weight: 'bold' }, backdropColor: 'rgba(255,255,255,0.9)' },
+        pointLabels: { font: { size: 11, weight: 'bold' }, color: '#063b7a' },
+        grid: { color: 'rgba(11,99,206,0.18)', lineWidth: 1.5 },
+        angleLines: { color: 'rgba(11,99,206,0.18)' }
+      }
+    }
+  });
+}
+
+// 🥧 Gráfico POLAR Premium — Ranking das 8 Competências
+async function gerarGraficoPolarPDF(compAvgs) {
+  return await gerarGraficoPremium('polarArea', {
+    labels: competencies.map(c => c.name.replace(/[^\w\sÀ-ÿ]/g, '').trim()),
+    datasets: [{
+      data: compAvgs,
+      backgroundColor: competencies.map(c => c.color + 'CC'),
+      borderColor: '#fff',
+      borderWidth: 2
+    }]
+  }, {
+    plugins: {
+      legend: {
+        position: 'right',
+        labels: { font: { size: 11, weight: 'bold' }, color: '#063b7a', padding: 10, boxWidth: 14 }
+      },
+      title: {
+        display: true,
+        text: 'Mapa Comparativo das 8 Competências',
+        font: { size: 16, weight: 'bold' },
+        color: '#063b7a',
+        padding: { top: 10, bottom: 20 }
+      },
+      datalabels: {
+        color: '#fff',
+        font: { size: 13, weight: 'bold' },
+        formatter: (v) => v.toFixed(1)
+      }
+    },
+    scales: {
+      r: {
+        beginAtZero: true, min: 0, max: 5,
+        ticks: { stepSize: 1, font: { size: 10 }, backdropColor: 'rgba(255,255,255,0.85)' },
+        grid: { color: 'rgba(11,99,206,0.15)' }
+      }
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// 📄 GERAÇÃO DO PDF — RELATÓRIO PLENITUDE IEC™ PREMIUM
 // ═══════════════════════════════════════════════════════
 async function generatePDF() {
   if (!dashboardData) return;
@@ -1559,7 +1742,6 @@ async function generatePDF() {
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(11);
       doc.text(p, 25, y + 9);
-      // Barra
       doc.setFillColor(230, 238, 252);
       doc.roundedRect(80, y + 4, 90, 6, 2, 2, 'F');
       doc.setFillColor(pillarColors[i][0], pillarColors[i][1], pillarColors[i][2]);
@@ -1570,7 +1752,94 @@ async function generatePDF() {
       y += 18;
     });
 
-    // ═══ PÁGINA 3: 8 COMPETÊNCIAS ═══
+    // ═══ 🆕 PÁGINA 3: DOUGHNUT DOS 3 PILARES (PREMIUM!) ═══
+    doc.addPage();
+    addPageHeader(doc, 'Análise Visual 360°');
+    y = 35;
+
+    btn.innerHTML = '<span class="loading-spinner"></span> Renderizando gráficos premium...';
+
+    const selfDataChart = dashboardData.selfAssessment?.responses
+      ? getCompetencyAverages(dashboardData.selfAssessment.responses)
+      : new Array(8).fill(0);
+    const evalDataChart = dashboardData.evaluations && dashboardData.evaluations.length
+      ? getCompetencyAverages(dashboardData.evaluations)
+      : new Array(8).fill(0);
+    const temAvaliadores = dashboardData.evaluations && dashboardData.evaluations.length > 0;
+
+    // 🍩 Gráfico 1: Doughnut dos Pilares
+    const imgPilares = await gerarGraficoPilaresPDF(allResp);
+    doc.addImage(imgPilares, 'PNG', 25, y, 160, 120);
+    y += 125;
+
+    // Insight visual abaixo do gráfico
+    doc.setFillColor(245, 249, 255);
+    doc.roundedRect(20, y, 170, 22, 3, 3, 'F');
+    doc.setTextColor(6, 59, 122);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.text('💡 Como interpretar:', 25, y + 7);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.text('Este gráfico mostra a distribuição da maturidade entre os 3 pilares cruciformes.', 25, y + 13);
+    doc.text('Pilares equilibrados indicam liderança integral; desequilíbrios apontam áreas de atenção.', 25, y + 18);
+
+    // ═══ 🆕 PÁGINA 4: RADAR COMPARATIVO (PREMIUM!) ═══
+    doc.addPage();
+    addPageHeader(doc, 'Espelho 360° Comparativo');
+    y = 35;
+
+    const imgRadar = await gerarGraficoRadarPDF(selfDataChart, evalDataChart, temAvaliadores);
+    doc.addImage(imgRadar, 'PNG', 20, y, 170, 130);
+    y += 135;
+
+    if (temAvaliadores) {
+      doc.setFillColor(245, 249, 255);
+      doc.roundedRect(20, y, 170, 28, 3, 3, 'F');
+      doc.setTextColor(6, 59, 122);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(10);
+      doc.text('💡 Como ler este gráfico:', 25, y + 7);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+      doc.text('• AZUL = sua autopercepção | VERDE = como os avaliadores percebem você.', 25, y + 13);
+      doc.text('• Quando as linhas se afastam, há um ponto cego ou força não percebida.', 25, y + 18);
+      doc.text('• Linhas próximas indicam autoconsciência madura — você se conhece bem.', 25, y + 23);
+    } else {
+      doc.setFillColor(254, 243, 199);
+      doc.roundedRect(20, y, 170, 18, 3, 3, 'F');
+      doc.setTextColor(120, 53, 15);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(10);
+      doc.text('ℹ️ Apenas autopercepção disponível', 25, y + 7);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+      doc.text('Convide avaliadores para ver a comparação completa entre auto e percepção externa.', 25, y + 13);
+    }
+
+    // ═══ 🆕 PÁGINA 5: POLAR DAS 8 COMPETÊNCIAS (PREMIUM!) ═══
+    doc.addPage();
+    addPageHeader(doc, 'Mapa das Competências');
+    y = 35;
+
+    const imgPolar = await gerarGraficoPolarPDF(compAvgs);
+    doc.addImage(imgPolar, 'PNG', 20, y, 170, 130);
+    y += 135;
+
+    doc.setFillColor(245, 249, 255);
+    doc.roundedRect(20, y, 170, 22, 3, 3, 'F');
+    doc.setTextColor(6, 59, 122);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.text('💡 Mapa Comparativo:', 25, y + 7);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.text('Setores maiores = competências mais maduras. Setores menores = áreas para crescer.', 25, y + 13);
+    doc.text('Use este mapa para identificar rapidamente onde investir nos próximos 90 dias.', 25, y + 18);
+
+    btn.innerHTML = '<span class="loading-spinner"></span> Finalizando relatório...';
+
+    // ═══ PÁGINA 6: 8 COMPETÊNCIAS DETALHADAS ═══
     doc.addPage();
     addPageHeader(doc, 'As 8 Competências');
     y = 40;
@@ -1607,7 +1876,7 @@ async function generatePDF() {
       if (y > 260) { doc.addPage(); addPageHeader(doc, 'As 8 Competências (cont.)'); y = 40; }
     });
 
-    // ═══ PÁGINA 4: FORÇAS E PONTOS CEGOS ═══
+    // ═══ PÁGINA: FORÇAS E PONTOS CEGOS ═══
     doc.addPage();
     addPageHeader(doc, 'Forças & Pontos Cegos');
     y = 40;
@@ -1659,7 +1928,7 @@ async function generatePDF() {
       y += 16;
     });
 
-    // ═══ PÁGINA 5: PDI - PLANO DE DESENVOLVIMENTO ═══
+    // ═══ PÁGINA: PDI ═══
     doc.addPage();
     addPageHeader(doc, 'PDI — Plano de Desenvolvimento');
     y = 40;
@@ -1691,7 +1960,7 @@ async function generatePDF() {
       if (y > 260) { doc.addPage(); addPageHeader(doc, 'PDI (cont.)'); y = 40; }
     });
 
-    // ═══ PÁGINA 6: COMENTÁRIOS ═══
+    // ═══ PÁGINA: COMENTÁRIOS ═══
     doc.addPage();
     addPageHeader(doc, 'Reflexões Consolidadas');
     y = 40;
@@ -1873,7 +2142,3 @@ async function postToScript(payload) {
 </script>
 </body>
 </html>
-
-
-
-  

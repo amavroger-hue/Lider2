@@ -1,0 +1,2341 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Discipulado 360° - Plenitude IEC™</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/2.4.0/purify.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg1: #0b4aa2; --bg2: #062b62; --surface: #f4f9ff; --card: #ffffff;
+      --text: #0f172a; --muted: #475569; --primary: #0b63ce; --primary2: #084aa0;
+      --accent: #38bdf8;
+      --c1: #cc0000; --c2: #d97706; --c3: #005ce6; --c4: #00994d;
+      --c5: #7c3aed; --c6: #db2777; --c7: #0891b2; --c8: #ea580c;
+      --shadow: 0 14px 34px rgba(2,32,71,.18);
+      --shadow2: 0 8px 20px rgba(2,32,71,.12);
+      --radius: 18px; --radius2: 14px;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0; font-family: 'Poppins', system-ui, -apple-system, sans-serif;
+      background:
+        radial-gradient(1200px 700px at 20% 10%, rgba(56,189,248,.35), transparent 55%),
+        radial-gradient(900px 600px at 85% 15%, rgba(255,215,0,.10), transparent 60%),
+        linear-gradient(135deg, var(--bg1), var(--bg2));
+      color: var(--text); line-height: 1.7; padding: 18px;
+    }
+    .shell {
+      max-width: 1200px; margin: 0 auto;
+      background: linear-gradient(180deg, rgba(244,249,255,.97), rgba(244,249,255,.94));
+      border: 1px solid rgba(56,189,248,.35); border-radius: var(--radius);
+      box-shadow: var(--shadow); overflow: hidden; position: relative;
+    }
+    .shell::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 6px;
+      background: linear-gradient(90deg, var(--c1), var(--c2), var(--c3), var(--c4), var(--c5), var(--c6), var(--c7), var(--c8));
+    }
+    .wrap { padding: 26px; }
+    .header { text-align: center; padding: 6px 0 14px; margin-bottom: 14px; border-bottom: 1px solid rgba(11,99,206,.08); }
+    .main-title { margin: 0; font-family: Arial, sans-serif; font-size: 19px; font-weight: normal; color: #64748b; letter-spacing: 0.12em; text-transform: uppercase; line-height: 1.2; }
+    .tagline { margin: 6px 0 0; font-weight: 700; color: var(--primary); font-size: 15px; font-family: Arial, sans-serif; line-height: 1.25; }
+    .sub-title { margin: 0; font-family: Arial, sans-serif; font-size: 35px; line-height: 1.15; color: #063b7a; font-weight: normal; letter-spacing: -0.01em; }
+    .header-desc { margin: 12px auto 0; max-width: 80ch; color: var(--muted); font-size: 15px; font-weight: normal; }
+    .step { display: none; }
+    .step.active { display: block; animation: fadeIn 0.4s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .card { background: var(--card); border: 1px solid rgba(207,230,255,.95); border-radius: var(--radius2); box-shadow: var(--shadow2); padding: 18px; }
+    .instructions {
+      background: linear-gradient(180deg, rgba(56,189,248,.14), rgba(56,189,248,.08));
+      border: 1px solid rgba(56,189,248,.25); border-left: 6px solid var(--accent);
+      border-radius: var(--radius2); padding: 16px; margin: 14px 0 18px; color: var(--text);
+    }
+    .instructions p, .instructions li { margin: 0 0 10px; font-size: 15px; color: var(--text); text-align: justify; }
+    .instructions ul { margin: 8px 0 0 0; padding-left: 18px; }
+
+    .welcome-hero-leader {
+      background: linear-gradient(135deg, #0b4aa2, #062b62);
+      color: #fff; padding: 50px 30px; border-radius: var(--radius2);
+      text-align: center; margin-bottom: 18px; box-shadow: var(--shadow);
+      position: relative; overflow: hidden;
+    }
+    .welcome-hero-leader::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 5px;
+      background: linear-gradient(90deg, var(--c1), var(--c2), var(--c3), var(--c4), var(--c5), var(--c6), var(--c7), var(--c8));
+    }
+    .welcome-hero-leader::after {
+      content: ''; position: absolute; top: 50%; right: -100px;
+      width: 300px; height: 300px;
+      background: radial-gradient(circle, rgba(56,189,248,0.15), transparent 70%);
+      border-radius: 50%; pointer-events: none;
+    }
+    .welcome-hero-leader .hero-badge {
+      display: inline-block; background: rgba(56,189,248,0.2);
+      border: 1.5px solid rgba(56,189,248,0.4); color: #38bdf8;
+      padding: 6px 16px; border-radius: 999px; font-size: 12px;
+      font-weight: 800; letter-spacing: 0.15em; text-transform: uppercase;
+      margin-bottom: 16px; font-family: Arial, sans-serif; position: relative; z-index: 1;
+    }
+    .welcome-hero-leader .welcome-icon-leader { font-size: 72px; margin-bottom: 14px; display: block; position: relative; z-index: 1; }
+    .welcome-hero-leader h2 { color: #fff; font-family: Arial, sans-serif; font-size: 32px; font-weight: 900; margin: 0 0 14px; line-height: 1.15; position: relative; z-index: 1; }
+    .welcome-hero-leader h2 .highlight { color: #38bdf8; }
+    .welcome-hero-leader p { font-size: 17px; margin: 0 auto; opacity: 0.95; max-width: 680px; line-height: 1.6; position: relative; z-index: 1; }
+
+    .welcome-quote {
+      background: linear-gradient(135deg, #f4f9ff, #e6eefc);
+      border-left: 6px solid var(--primary); border-radius: var(--radius2);
+      padding: 24px 28px; margin: 16px 0; position: relative;
+    }
+    .welcome-quote::before { content: '"'; position: absolute; top: -10px; left: 16px; font-size: 80px; color: rgba(11,99,206,0.15); font-family: Georgia, serif; font-weight: bold; line-height: 1; }
+    .welcome-quote p { margin: 0; font-size: 16px; color: #063b7a; font-style: italic; font-weight: 500; line-height: 1.7; padding-left: 30px; }
+    .welcome-quote .author { display: block; margin-top: 10px; font-size: 13px; color: #64748b; font-weight: 700; font-style: normal; font-family: Arial, sans-serif; }
+
+    .welcome-section { background: #fff; border: 1px solid #d5e6fb; border-radius: var(--radius2); padding: 26px; margin-bottom: 16px; box-shadow: var(--shadow2); }
+    .welcome-section h3 { color: #063b7a; font-family: Arial, sans-serif; font-size: 19px; font-weight: 900; margin: 0 0 14px; display: flex; align-items: center; gap: 10px; }
+    .welcome-section p { font-size: 15px; color: #475569; margin: 0 0 10px; line-height: 1.7; }
+
+    .pillars-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 16px 0; }
+    @media (max-width: 720px) { .pillars-grid { grid-template-columns: 1fr; } }
+    .pillar-box { background: #fff; border: 2px solid #d5e6fb; border-radius: 14px; padding: 16px; text-align: center; box-shadow: var(--shadow2); }
+    .pillar-box .pillar-icon { font-size: 32px; margin-bottom: 6px; }
+    .pillar-box .pillar-name { font-family: Arial, sans-serif; font-weight: 900; font-size: 15px; color: #063b7a; margin-bottom: 4px; }
+    .pillar-box .pillar-desc { font-size: 12px; color: #64748b; font-weight: 600; }
+
+    .journey-timeline { position: relative; padding-left: 0; list-style: none; margin: 16px 0 0; }
+    .journey-step { display: flex; gap: 16px; padding: 14px 0; border-bottom: 1px dashed #d5e6fb; align-items: flex-start; }
+    .journey-step:last-child { border-bottom: none; padding-bottom: 0; }
+    .journey-step:first-child { padding-top: 0; }
+    .journey-number { flex-shrink: 0; width: 44px; height: 44px; background: linear-gradient(135deg, #0b63ce, #084aa0); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 18px; font-family: Arial, sans-serif; box-shadow: 0 6px 14px rgba(11,99,206,0.25); }
+    .journey-content { flex: 1; }
+    .journey-content h4 { margin: 0 0 4px; font-family: Arial, sans-serif; font-size: 15px; font-weight: 900; color: #063b7a; }
+    .journey-content p { margin: 0; font-size: 13px; color: #475569; line-height: 1.5; }
+
+    .welcome-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 18px 0; }
+    @media (max-width: 720px) { .welcome-stats { grid-template-columns: repeat(2, 1fr); } }
+    .stat-box { background: linear-gradient(135deg, #f4f9ff, #e6eefc); border: 2px solid #d5e6fb; border-radius: 12px; padding: 16px 12px; text-align: center; transition: all 0.2s ease; }
+    .stat-box:hover { transform: translateY(-3px); box-shadow: 0 12px 22px rgba(11,99,206,0.15); border-color: var(--accent); }
+    .stat-box .icon { font-size: 28px; }
+    .stat-box .value { font-size: 20px; font-weight: 900; color: #063b7a; font-family: Arial, sans-serif; margin: 4px 0 2px; line-height: 1.1; }
+    .stat-box .label { font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; font-family: Arial, sans-serif; }
+
+    .impact-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin: 16px 0; }
+    @media (max-width: 760px) { .impact-cards { grid-template-columns: 1fr; } }
+    .impact-card { background: #fff; border: 2px solid #d5e6fb; border-radius: 14px; padding: 18px; text-align: center; transition: all 0.2s ease; }
+    .impact-card:hover { transform: translateY(-3px); box-shadow: 0 14px 28px rgba(2,32,71,0.12); }
+    .impact-card .icon-big { font-size: 40px; display: block; margin-bottom: 10px; }
+    .impact-card h4 { margin: 0 0 8px; color: #063b7a; font-family: Arial, sans-serif; font-size: 15px; font-weight: 900; }
+    .impact-card p { margin: 0; font-size: 13px; color: #475569; line-height: 1.5; }
+
+    .courage-banner { background: linear-gradient(135deg, #7c3aed, #5b21b6); color: #fff; padding: 24px; border-radius: 14px; margin: 16px 0; box-shadow: 0 12px 28px rgba(124,58,237,0.30); position: relative; overflow: hidden; }
+    .courage-banner::before { content: '✝️'; position: absolute; top: 50%; right: 20px; transform: translateY(-50%); font-size: 80px; opacity: 0.15; }
+    .courage-banner h4 { margin: 0 0 8px; font-family: Arial, sans-serif; font-size: 18px; font-weight: 900; display: flex; align-items: center; gap: 8px; }
+    .courage-banner p { margin: 0; font-size: 14px; line-height: 1.7; opacity: 0.95; max-width: 90%; }
+
+    .ready-section { background: linear-gradient(135deg, #fef3c7, #fde68a); border: 2px solid #fcd34d; border-radius: 14px; padding: 22px; margin: 16px 0; }
+    .ready-section h4 { margin: 0 0 12px; color: #78350f; font-family: Arial, sans-serif; font-size: 17px; font-weight: 900; }
+    .ready-section ul { margin: 0; padding-left: 0; list-style: none; }
+    .ready-section li { font-size: 14px; color: #78350f; padding: 6px 0 6px 30px; position: relative; line-height: 1.6; font-weight: 600; }
+    .ready-section li::before { content: '✓'; position: absolute; left: 0; top: 6px; width: 22px; height: 22px; background: #d97706; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 13px; }
+
+    .access-quick { background: linear-gradient(135deg, #fff, #f4f9ff); border: 3px solid #0b63ce; border-radius: 16px; padding: 36px 22px 28px; margin: 24px 0; box-shadow: 0 16px 32px rgba(11,99,206,0.18); position: relative; }
+    .access-quick::before { content: '🔐'; position: absolute; top: -22px; left: 50%; transform: translateX(-50%); background: #fff; border: 3px solid #0b63ce; width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+    .access-quick h3 { margin: 0 0 18px; text-align: center; color: #063b7a; font-family: Arial, sans-serif; font-size: 20px; font-weight: 900; }
+    .access-options { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    @media (max-width: 600px) { .access-options { grid-template-columns: 1fr; } }
+    .access-card { background: #fff; border: 2.5px solid #d5e6fb; border-radius: 14px; padding: 24px 18px; text-align: center; cursor: pointer; transition: all 0.25s ease; }
+    .access-card:hover { transform: translateY(-4px); border-color: #0b63ce; box-shadow: 0 16px 28px rgba(11,99,206,0.22); }
+    .access-card .ac-icon { font-size: 48px; display: block; margin-bottom: 10px; }
+    .access-card h4 { margin: 0 0 8px; color: #063b7a; font-family: Arial, sans-serif; font-size: 17px; font-weight: 900; }
+    .access-card p { margin: 0 0 14px; font-size: 13px; color: #475569; line-height: 1.5; }
+    .access-card .btn-mini { background: linear-gradient(45deg, #0b63ce, #084aa0); color: #fff; padding: 10px 22px; border-radius: 10px; font-weight: 800; font-size: 13px; font-family: Arial, sans-serif; display: inline-block; border: none; }
+    .access-card.alt .btn-mini { background: linear-gradient(45deg, #10b981, #059669); }
+
+    .pin-wrapper { display: flex; justify-content: center; gap: 12px; margin: 20px 0 8px; }
+    .pin-digit { width: 64px; height: 72px; border: 2.5px solid #d5e6fb; border-radius: 14px; text-align: center; font-size: 32px; font-weight: 900; color: #063b7a; background: #fff; font-family: Arial, sans-serif; outline: none; transition: all 0.2s ease; }
+    .pin-digit:focus { border-color: #0b63ce; box-shadow: 0 0 0 4px rgba(56,189,248,0.25); transform: scale(1.05); }
+    .pin-digit.filled { background: linear-gradient(135deg, #f4f9ff, #e6eefc); border-color: #0b63ce; }
+    @media (max-width: 480px) { .pin-digit { width: 54px; height: 62px; font-size: 26px; } .pin-wrapper { gap: 8px; } }
+    .pin-helper { text-align: center; font-size: 13px; color: #64748b; font-weight: 700; font-family: Arial, sans-serif; margin-top: 6px; }
+    .pin-error { text-align: center; color: #dc2626; font-size: 14px; font-weight: 800; font-family: Arial, sans-serif; margin: 10px 0; min-height: 22px; }
+
+    .login-card { max-width: 480px; margin: 0 auto; background: #fff; border: 1px solid #d5e6fb; border-radius: 18px; padding: 36px 28px; box-shadow: 0 16px 32px rgba(2,32,71,0.12); }
+    .login-card .login-icon { text-align: center; font-size: 56px; margin-bottom: 8px; }
+    .login-card h2 { text-align: center; margin: 0 0 6px; color: #063b7a; font-family: Arial, sans-serif; font-size: 24px; font-weight: 900; }
+    .login-card .subtitle { text-align: center; color: #64748b; font-size: 14px; margin: 0 0 20px; }
+    .login-link { text-align: center; margin-top: 14px; font-size: 13px; color: #475569; }
+    .login-link a { color: #0b63ce; font-weight: 800; text-decoration: none; cursor: pointer; }
+    .login-link a:hover { text-decoration: underline; }
+
+    .dashboard-hero { background: linear-gradient(135deg, #0b4aa2, #062b62); color: #fff; padding: 30px 26px; border-radius: 18px; margin-bottom: 18px; box-shadow: 0 16px 32px rgba(11,74,162,0.30); position: relative; overflow: hidden; }
+    .dashboard-hero::after { content: '✝️'; position: absolute; top: 50%; right: 24px; transform: translateY(-50%); font-size: 100px; opacity: 0.12; }
+    .dashboard-hero h2 { margin: 0 0 6px; font-family: Arial, sans-serif; font-size: 26px; font-weight: 900; }
+    .dashboard-hero p { margin: 0; font-size: 14px; opacity: 0.92; }
+    .dashboard-hero .user-tag { display: inline-block; background: rgba(56,189,248,0.25); border: 1.5px solid rgba(56,189,248,0.5); padding: 4px 12px; border-radius: 999px; font-size: 11px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 8px; font-family: Arial, sans-serif; }
+
+    .status-block { background: #fff; border: 1px solid #d5e6fb; border-radius: 16px; padding: 24px; margin-bottom: 16px; box-shadow: 0 8px 20px rgba(2,32,71,0.08); }
+    .status-block h3 { margin: 0 0 14px; color: #063b7a; font-family: Arial, sans-serif; font-size: 17px; font-weight: 900; }
+    .status-bar { background: #e6eefc; border-radius: 999px; height: 28px; overflow: visible; position: relative; margin: 28px 0 8px; }
+    .status-fill { background: linear-gradient(90deg, #38bdf8, #0b63ce); height: 100%; border-radius: 999px; transition: width 0.5s ease; display: flex; align-items: center; justify-content: flex-end; padding-right: 12px; color: #fff; font-weight: 900; font-size: 13px; font-family: Arial, sans-serif; min-width: 50px; }
+    .status-info { display: flex; justify-content: space-between; font-size: 13px; color: #475569; font-weight: 700; font-family: Arial, sans-serif; }
+
+    .dashboard-charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+    @media (max-width: 880px) { .dashboard-charts-grid { grid-template-columns: 1fr; } }
+    .chart-card-dash { background: #fff; border: 1px solid #d5e6fb; border-radius: 16px; padding: 20px; box-shadow: var(--shadow2); }
+    .chart-card-dash h3 { margin: 0 0 6px; color: #063b7a; font-family: Arial, sans-serif; font-size: 16px; font-weight: 900; text-align: center; }
+    .chart-card-dash .chart-sub { text-align: center; color: #64748b; font-size: 12px; margin: 0 0 14px; font-weight: 600; }
+    .chart-wrapper-dash { position: relative; height: 320px; }
+
+    .actions-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+    @media (max-width: 600px) { .actions-grid { grid-template-columns: 1fr; } }
+    .action-btn { background: #fff; border: 2px solid #d5e6fb; border-radius: 14px; padding: 18px; cursor: pointer; text-align: left; transition: all 0.2s ease; display: flex; align-items: center; gap: 14px; font-family: 'Poppins', sans-serif; }
+    .action-btn:hover { transform: translateY(-2px); border-color: #0b63ce; box-shadow: 0 14px 24px rgba(11,99,206,0.18); }
+    .action-btn .ab-icon { font-size: 32px; flex-shrink: 0; }
+    .action-btn .ab-text { flex: 1; }
+    .action-btn .ab-title { font-weight: 900; color: #063b7a; font-family: Arial, sans-serif; font-size: 15px; margin-bottom: 2px; }
+    .action-btn .ab-desc { font-size: 12px; color: #64748b; font-weight: 600; }
+    .action-btn.primary { background: linear-gradient(135deg, #10b981, #059669); border-color: #059669; }
+    .action-btn.primary .ab-title, .action-btn.primary .ab-desc { color: #fff; }
+    .action-btn.primary:hover { box-shadow: 0 14px 24px rgba(16,185,129,0.30); }
+    .action-btn.danger { background: #fff; border-color: #fecaca; }
+    .action-btn.danger .ab-title { color: #b91c1c; }
+
+    .return-info { background: linear-gradient(135deg, #fef3c7, #fde68a); border: 2px solid #fcd34d; border-radius: 14px; padding: 22px; margin: 16px 0; }
+    .return-info h4 { margin: 0 0 12px; color: #78350f; font-family: Arial, sans-serif; font-size: 17px; font-weight: 900; display: flex; align-items: center; gap: 8px; }
+    .return-info p { margin: 0 0 10px; color: #78350f; font-size: 14px; line-height: 1.6; font-weight: 600; }
+    .return-info .credentials-box { background: #fff; border: 2px dashed #d97706; border-radius: 12px; padding: 14px; margin-top: 12px; }
+    .return-info .credentials-box strong { color: #78350f; font-family: Arial, sans-serif; }
+
+    .grid-form { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 24px; }
+    @media (max-width: 760px) { .grid-form { grid-template-columns: 1fr; } }
+    .form-group label { display: block; font-weight: 800; color: #063b7a; margin-bottom: 8px; font-size: 15px; font-family: Arial, sans-serif; }
+    .field { position: relative; }
+    .field svg { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: #64748b; z-index: 2; pointer-events: none; }
+    .field input, .field select { width: 100%; padding: 14px 14px 14px 44px; border: 1.5px solid rgba(11,99,206,.28); border-radius: 12px; font-size: 16px; background: #fff; outline: none; transition: box-shadow .2s ease, border-color .2s ease; font-family: 'Poppins', sans-serif; }
+    .field input:focus, .field select:focus { border-color: rgba(11,99,206,.55); box-shadow: 0 0 0 4px rgba(56,189,248,.22); }
+    .input-error { border-color: #dc2626 !important; background: #fef2f2 !important; }
+    .field-error { color: #dc2626; font-size: 12px; font-weight: 700; font-family: Arial, sans-serif; display: block; margin-top: 4px; }
+
+    .topbar { display: flex; flex-wrap: wrap; gap: 10px 12px; align-items: center; justify-content: space-between; margin: 10px 0 12px; }
+    .counter { font-weight: 800; color: #0b2a52; font-size: 14px; font-family: Arial, sans-serif; }
+    .progress-meta { font-weight: 700; color: var(--muted); font-size: 13px; font-family: Arial, sans-serif; }
+    .progress-bar { width: 100%; background: #e6eefc; border-radius: 999px; overflow: hidden; height: 12px; border: 1px solid rgba(11,99,206,.12); }
+    .progress-fill { height: 100%; width: 0%; border-radius: 999px; background: linear-gradient(90deg, var(--accent), var(--primary)); transition: width .35s ease-in-out; }
+    .question-card { margin-top: 12px; padding: 30px; }
+    .question-pillar-tag { text-align: center; font-size: 11px; font-weight: 700; color: #94a3b8; margin-bottom: 4px; font-family: Arial, sans-serif; letter-spacing: .1em; text-transform: uppercase; }
+    .question-competence { text-align: center; font-size: 12px; font-weight: 900; letter-spacing: .12em; text-transform: uppercase; color: var(--primary); margin-bottom: 8px; font-family: Arial, sans-serif; }
+    .question-title { margin: 0 0 10px; font-size: 22px; font-weight: 700; color: #0f172a; text-align: center; min-height: 72px; display: flex; align-items: center; justify-content: center; line-height: 1.45; }
+    .question-verse { text-align: center; color: #64748b; font-size: 12px; font-style: italic; margin: -4px 0 14px; padding: 0 20px; font-weight: 500; }
+    .question-helper { text-align: center; color: #64748b; font-size: 13px; font-weight: 700; margin-top: -2px; margin-bottom: 18px; font-family: Arial, sans-serif; }
+    .options { display: flex; flex-wrap: wrap; justify-content: center; align-items: stretch; gap: 10px; margin-top: 8px; }
+    .opt { border: 1.5px solid rgba(11,99,206,.22); background: rgba(11,99,206,.06); border-radius: 14px; padding: 12px 14px; cursor: pointer; user-select: none; transition: all .15s ease; min-height: 100px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; font-weight: 700; color: #0b2a52; font-size: 13px; flex: 0 1 calc(20% - 10px); max-width: 190px; min-width: 135px; line-height: 1.25; gap: 4px; }
+    .opt-emoji { font-size: 26px; line-height: 1; margin-bottom: 2px; }
+    .opt-num { font-size: 22px; font-weight: 900; font-family: Arial, sans-serif; line-height: 1; }
+    .opt small { font-size: 12px; color: inherit; font-weight: 800; line-height: 1.25; font-family: Arial, sans-serif; display: block; }
+    .opt-desc { font-size: 10px; opacity: 0.75; font-weight: 600; margin-top: 2px; }
+    @media (max-width: 880px) { .opt { flex: 0 1 calc(50% - 10px); min-width: 145px; } }
+    @media (max-width: 460px) { .opt { flex: 0 1 100%; max-width: 100%; min-width: 0; } }
+    .opt:hover { transform: translateY(-2px); box-shadow: 0 12px 18px rgba(2,32,71,.10); border-color: rgba(56,189,248,.55); }
+    .opt.selected { background: linear-gradient(45deg, var(--primary), var(--primary2)); border-color: rgba(11,99,206,.55); color: #fff; box-shadow: 0 14px 22px rgba(11,99,206,.22); font-weight: 700; font-family: Arial, sans-serif; }
+
+    .nav { display: flex; gap: 10px; justify-content: space-between; margin-top: 18px; flex-wrap: wrap; }
+    .btn { appearance: none; border: none; cursor: pointer; border-radius: 14px; padding: 12px 16px; font-size: 14px; font-weight: 800; transition: all .2s ease; display: inline-flex; align-items: center; gap: 10px; font-family: Arial, sans-serif; }
+    .btn-primary { background: linear-gradient(45deg, var(--primary), var(--primary2)); color: #fff; box-shadow: 0 10px 18px rgba(11,99,206,.22); }
+    .btn-primary:hover { transform: translateY(-1px); filter: saturate(1.05); box-shadow: 0 14px 26px rgba(11,99,206,.30); }
+    .btn-ghost { background: #fff; color: #0b2a52; border: 1.5px solid rgba(11,99,206,.22); box-shadow: 0 8px 16px rgba(2,32,71,.08); text-decoration: none; }
+    .btn-ghost:hover { transform: translateY(-1px); border-color: rgba(56,189,248,.55); }
+    .btn:disabled { opacity: .55; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
+
+    .code-box { background: linear-gradient(135deg, #063b7a, #0b63ce); color: #fff; padding: 28px; border-radius: 18px; text-align: center; margin: 20px 0; box-shadow: var(--shadow); }
+    .code-box .code-label { font-size: 13px; font-weight: 700; letter-spacing: .15em; text-transform: uppercase; opacity: .85; font-family: Arial, sans-serif; }
+    .code-box .code-value { font-size: 38px; font-weight: 900; letter-spacing: .12em; margin: 8px 0; font-family: Arial, sans-serif; }
+    .code-box .code-link { background: rgba(255,255,255,.15); padding: 12px; border-radius: 10px; word-break: break-all; font-size: 13px; font-family: monospace; margin-top: 12px; border: 1px dashed rgba(255,255,255,.3); }
+    .invite-card { background: #fff; border: 1px solid #d5e6fb; border-radius: 16px; padding: 18px; margin-top: 14px; box-shadow: var(--shadow2); }
+    .invite-card h4 { margin: 0 0 10px; color: #12284b; font-family: Arial, sans-serif; font-size: 16px; font-weight: 900; }
+    .invite-card p { margin: 0 0 8px; font-size: 14px; color: #475569; }
+    .min-highlight { background: linear-gradient(135deg, #10b981, #059669); color: #fff; padding: 20px; border-radius: 14px; text-align: center; margin: 14px 0; box-shadow: 0 10px 24px rgba(16,185,129,.25); }
+    .min-highlight .big-num { font-size: 42px; font-weight: 900; font-family: Arial, sans-serif; line-height: 1; }
+    .min-highlight .label { font-size: 13px; letter-spacing: 0.15em; text-transform: uppercase; opacity: 0.92; font-weight: 700; margin-top: 4px; }
+    .min-highlight .desc { font-size: 14px; margin-top: 8px; opacity: 0.95; font-weight: 600; }
+    .tip-card { background: #fff; border: 2px dashed #d5e6fb; border-radius: 14px; padding: 16px; margin-top: 12px; }
+    .tip-card h5 { margin: 0 0 10px; color: #063b7a; font-size: 14px; font-weight: 900; font-family: Arial, sans-serif; }
+    .tip-card ul { margin: 0; padding-left: 20px; }
+    .tip-card li { font-size: 13px; color: #475569; margin-bottom: 4px; }
+    .footer { margin-top: 20px; text-align: center; color: var(--muted); font-size: 12px; font-weight: 700; font-family: Arial, sans-serif; }
+    .signature { text-align: center; color: var(--muted); font-size: 12px; font-weight: 700; font-family: Arial, sans-serif; margin-top: 10px; }
+    .status { font-family: Arial, sans-serif; font-weight: bold; min-height: 22px; margin-top: 8px; text-align: center; }
+    .status-success { color: #10b981; } .status-error { color: #ef4444; } .status-pending { color: #f59e0b; }
+    .loading-spinner { display: inline-block; width: 20px; height: 20px; border: 3px solid rgba(11,99,206,.2); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .verse-quote-mini { background: #f4f9ff; border-left: 4px solid #0b63ce; border-radius: 10px; padding: 14px 16px; margin: 14px 0; font-style: italic; color: #063b7a; font-size: 14px; }
+    .verse-quote-mini .ref { display: block; margin-top: 6px; font-size: 12px; font-weight: 700; font-style: normal; color: #64748b; font-family: Arial, sans-serif; }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div class="wrap">
+
+      <div class="header">
+        <p class="main-title">✝️ Plenitude IEC™</p>
+        <p class="tagline">Onde a Inteligência Emocional encontra a Palavra</p>
+        <h1 class="sub-title">Discipulado 360°</h1>
+        <p class="header-desc">Mapeie sua liderança ministerial à luz da Palavra, a partir de múltiplas perspectivas: sua autopercepção, seu superior (Paulo), seus pares (Barnabé) e seus liderados (Timóteo). Receba um relatório completo com forças, pontos cegos e plano de desenvolvimento personalizado.</p>
+      </div>
+
+      <!-- ETAPA 1: BOAS-VINDAS -->
+      <section id="step-welcome" class="step active">
+
+        <div class="welcome-hero-leader">
+          <span class="hero-badge">Movidos Pela Maravilhosa Graça</span>
+          <span class="welcome-icon-leader">✝️</span>
+          <h2>Bem-vindo(a) à <span class="highlight">jornada de evolução</span> da sua liderança ministerial</h2>
+          <p>Você está prestes a embarcar em um dos exercícios mais transformadores da vida de qualquer líder cristão: olhar para si mesmo através dos olhos de quem caminha com você, à luz da Palavra.</p>
+        </div>
+
+        <div class="access-quick">
+          <h3>Como você quer começar?</h3>
+          <div class="access-options">
+            <div class="access-card" onclick="showStep('step-intro')">
+              <span class="ac-icon">🆕</span>
+              <h4>Primeira vez aqui</h4>
+              <p>Crie seu cadastro e inicie sua autoavaliação. Leva ~15 minutos.</p>
+              <button class="btn-mini" type="button">Iniciar Cadastro →</button>
+            </div>
+            <div class="access-card alt" onclick="showStep('step-login')">
+              <span class="ac-icon">🔑</span>
+              <h4>Já tenho cadastro</h4>
+              <p>Acesse seu painel para verificar status e gerar relatório.</p>
+              <button class="btn-mini" type="button">Entrar com PIN →</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="welcome-quote">
+          <p>O autoconhecimento é o início da sabedoria. E a maneira mais poderosa de se conhecer é através da percepção honesta de quem caminha ao seu lado em Cristo.</p>
+          <span class="author">— Filosofia Plenitude IEC™</span>
+        </div>
+
+        <div class="welcome-section">
+          <h3>📖 O que é o Discipulado 360° Plenitude IEC™?</h3>
+          <p>É uma das ferramentas de desenvolvimento de liderança cristã <strong>mais poderosas e bíblicas</strong>. Diferente de avaliações tradicionais, o método 360° não captura apenas como você se vê, mas <strong>como sua liderança ministerial é experimentada</strong> por quem está ao seu redor — superior, pares e liderados.</p>
+          <p>O resultado? Um <strong>retrato 360° completo</strong> da sua liderança, com forças que você pode amplificar para a glória de Deus, pontos cegos que merecem atenção e um <strong>plano de desenvolvimento personalizado</strong>.</p>
+        </div>
+
+        <div class="welcome-section">
+          <h3>✝️ Os 3 Pilares Cruciformes da Liderança Cristã</h3>
+          <p>Como a cruz, esta avaliação se ergue em três dimensões inseparáveis:</p>
+          <div class="pillars-grid">
+            <div class="pillar-box">
+              <div class="pillar-icon">⬆️</div>
+              <div class="pillar-name">CARÁTER</div>
+              <div class="pillar-desc">Quem o líder É diante de Deus<br><em>(Vida Espiritual + IE Cristã)</em></div>
+            </div>
+            <div class="pillar-box">
+              <div class="pillar-icon">🛠️</div>
+              <div class="pillar-name">COMPETÊNCIA</div>
+              <div class="pillar-desc">O que o líder FAZ pelo Reino<br><em>(Pregação + Cuidado + Liderança + Discipulado)</em></div>
+            </div>
+            <div class="pillar-box">
+              <div class="pillar-icon">↔️</div>
+              <div class="pillar-name">COMUNHÃO</div>
+              <div class="pillar-desc">Como o líder VIVE com outros<br><em>(Comunhão + Missão de Reino)</em></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="welcome-section">
+          <h3>🛤️ Sua jornada em 4 etapas simples</h3>
+          <ul class="journey-timeline">
+            <li class="journey-step">
+              <div class="journey-number">1</div>
+              <div class="journey-content">
+                <h4>Cadastro e Autoavaliação</h4>
+                <p>Você preenche seus dados, cria um PIN de 4 dígitos e responde 48 questões sobre como percebe sua própria liderança ministerial. Tempo estimado: ~15 minutos.</p>
+              </div>
+            </li>
+            <li class="journey-step">
+              <div class="journey-number">2</div>
+              <div class="journey-content">
+                <h4>Convite aos Avaliadores</h4>
+                <p>Você recebe um código único e um link para compartilhar com pessoas que convivem com você no ministério (mínimo: 3 pessoas).</p>
+              </div>
+            </li>
+            <li class="journey-step">
+              <div class="journey-number">3</div>
+              <div class="journey-content">
+                <h4>Avaliações Anônimas</h4>
+                <p>Seu superior, pares e liderados respondem de forma 100% anônima. Você jamais saberá o que cada um respondeu individualmente.</p>
+              </div>
+            </li>
+            <li class="journey-step">
+              <div class="journey-number">4</div>
+              <div class="journey-content">
+                <h4>Acesso ao Painel e Relatório</h4>
+                <p>Volte quando quiser usando seu e-mail + PIN. Acompanhe o status e gere seu relatório executivo em PDF quando atingir 3 avaliadores.</p>
+              </div>
+            </li>
+          </ul>
+        </div>
+
+        <div class="welcome-stats">
+          <div class="stat-box"><div class="icon">⏱️</div><div class="value">15 min</div><div class="label">Autoavaliação</div></div>
+          <div class="stat-box"><div class="icon">📋</div><div class="value">48 + 3</div><div class="label">Questões + Reflexões</div></div>
+          <div class="stat-box"><div class="icon">🎯</div><div class="value">8</div><div class="label">Competências</div></div>
+          <div class="stat-box"><div class="icon">📊</div><div class="value">PDF</div><div class="label">Relatório Completo</div></div>
+        </div>
+
+        <div class="welcome-section">
+          <h3>🎁 O que você vai receber ao final</h3>
+          <div class="impact-cards">
+            <div class="impact-card"><span class="icon-big">📊</span><h4>Score Executivo</h4><p>Sua nota geral de liderança (0-100) com o estilo predominante identificado à luz da Palavra.</p></div>
+            <div class="impact-card"><span class="icon-big">🌟</span><h4>Forças & Pontos Cegos</h4><p>O que você faz muito bem e o que outros veem que você ainda não percebe.</p></div>
+            <div class="impact-card"><span class="icon-big">🚀</span><h4>PDI Personalizado</h4><p>Plano de Desenvolvimento Individual com 3 ações práticas para os próximos 90 dias.</p></div>
+          </div>
+        </div>
+
+        <div class="courage-banner">
+          <h4>💎 Um lembrete sobre coragem</h4>
+          <p>Submeter-se a um Discipulado 360° exige <strong>coragem e humildade</strong>. Você está abrindo espaço para a verdade — e a verdade, mesmo quando desconfortável, é o solo onde toda transformação acontece. Lembre-se: <strong>os melhores líderes cristãos são aqueles que têm a humildade de buscar feedback constante</strong>.</p>
+        </div>
+
+        <div class="ready-section">
+          <h4>⚡ Antes de iniciar, prepare-se</h4>
+          <ul>
+            <li>Reserve <strong>~15 minutos</strong> em um ambiente tranquilo, com oração</li>
+            <li>Tenha em mãos seu <strong>e-mail e WhatsApp ativos</strong> (você receberá comunicações importantes)</li>
+            <li>Pense em pelo menos <strong>3 pessoas</strong> que poderão te avaliar (superior, pares e/ou liderados)</li>
+            <li>Escolha um <strong>PIN de 4 dígitos</strong> fácil de lembrar (você usará para acessar seu painel)</li>
+            <li>Responda com <strong>honestidade radical diante de Deus</strong> — não há resposta certa, há a sua verdade</li>
+          </ul>
+        </div>
+
+        <p class="signature" style="margin-top:18px;">Pr. Roger - amavroger@gmail.com</p>
+        <p class="footer">✨ Plenitude IEC™ | Discipulado 360° — Onde a IE encontra a Palavra</p>
+      </section>
+
+      <!-- ETAPA: TELA DE LOGIN -->
+      <section id="step-login" class="step">
+        <div class="login-card">
+          <div class="login-icon">🔐</div>
+          <h2>Acessar Meu Painel</h2>
+          <p class="subtitle">Entre com seu e-mail cadastrado e seu PIN de 4 dígitos</p>
+
+          <div class="form-group" style="margin-bottom:18px;">
+            <label for="login-email">📧 E-mail cadastrado</label>
+            <div class="field">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+              <input type="email" id="login-email" placeholder="seu@email.com" autocomplete="email" />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label style="text-align:center; display:block;">🔑 Seu PIN de 4 dígitos</label>
+            <div class="pin-wrapper" id="login-pin-wrapper">
+              <input type="tel" maxlength="1" class="pin-digit" data-index="0" inputmode="numeric" pattern="[0-9]" />
+              <input type="tel" maxlength="1" class="pin-digit" data-index="1" inputmode="numeric" pattern="[0-9]" />
+              <input type="tel" maxlength="1" class="pin-digit" data-index="2" inputmode="numeric" pattern="[0-9]" />
+              <input type="tel" maxlength="1" class="pin-digit" data-index="3" inputmode="numeric" pattern="[0-9]" />
+            </div>
+            <p class="pin-helper">Digite os 4 dígitos do seu PIN</p>
+            <p id="login-error" class="pin-error"></p>
+          </div>
+
+          <button id="btn-login" class="btn btn-primary" type="button" onclick="doLogin()" style="width:100%; justify-content:center; padding:16px; font-size:16px; margin-top:8px;">
+            🚀 Entrar no Meu Painel
+          </button>
+
+          <p class="login-link"><a onclick="forgotPin()">🤔 Esqueci meu PIN</a></p>
+          <p class="login-link">Não tem cadastro? <a onclick="showStep('step-intro')">Criar conta agora</a></p>
+          <p class="login-link"><a onclick="showStep('step-welcome')">← Voltar à página inicial</a></p>
+        </div>
+      </section>
+
+      <!-- ETAPA: CADASTRO -->
+      <section id="step-intro" class="step">
+        <div class="instructions">
+          <p><strong>📋 Vamos começar pelo seu cadastro.</strong></p>
+          <p>Preencha seus dados ministeriais e crie um <strong>PIN de 4 dígitos</strong>. Você usará esse PIN sempre que quiser acessar seu painel — de qualquer dispositivo, em qualquer lugar.</p>
+          <p style="margin:0;"><strong>📌 Mínimo necessário de avaliadores:</strong> 3 pessoas no total — em qualquer combinação (3 liderados, ou 2 pares + 1 superior, ou outra que totalize 3).</p>
+        </div>
+
+        <div class="card" style="width:100%; max-width:860px; margin:0 auto; padding:32px 24px;">
+          <h3 style="margin:0 0 18px; color:#063b7a; font-family:Arial,sans-serif; font-size:20px; font-weight:900; text-align:center;">Cadastro do Líder</h3>
+
+          <div class="grid-form">
+            <div class="form-group">
+              <label for="name">Nome Completo *</label>
+              <div class="field">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                <input type="text" id="name" placeholder="Ex: Pr. João Silva" oninput="validateForm()" onblur="validateForm()" />
+              </div>
+              <span id="name-error" class="field-error"></span>
+            </div>
+
+            <div class="form-group">
+              <label for="email">E-mail *</label>
+              <div class="field">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                <input type="email" id="email" placeholder="email@exemplo.com" oninput="validateForm()" onblur="validateForm()" />
+              </div>
+              <span id="email-error" class="field-error"></span>
+            </div>
+
+            <div class="form-group">
+              <label for="whatsapp">WhatsApp *</label>
+              <div class="field">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+                <input type="text" id="whatsapp" placeholder="(00) 90000-0000" oninput="maskWhatsApp(this); validateForm();" onblur="validateForm()" />
+              </div>
+              <span id="whatsapp-error" class="field-error"></span>
+            </div>
+
+            <div class="form-group">
+              <label for="company">Igreja / Ministério *</label>
+              <div class="field">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                <input type="text" id="company" placeholder="Ex: IEC Plenitude" oninput="validateForm()" onblur="validateForm()" />
+              </div>
+              <span id="company-error" class="field-error"></span>
+            </div>
+
+            <div class="form-group">
+              <label for="position">Função Atual *</label>
+              <div class="field">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                <input type="text" id="position" placeholder="Ex: Pastor / Líder de Célula" oninput="validateForm()" onblur="validateForm()" />
+              </div>
+              <span id="position-error" class="field-error"></span>
+            </div>
+
+            <div class="form-group">
+              <label for="level">Nível de Liderança *</label>
+              <div class="field">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+                <select id="level" onchange="validateForm()" onblur="validateForm()">
+                  <option value="">Selecione...</option>
+                  <option value="Líder de Célula / Pequeno Grupo">Líder de Célula / Pequeno Grupo</option>
+                  <option value="Líder de Ministério">Líder de Ministério</option>
+                  <option value="Diácono / Diaconisa">Diácono / Diaconisa</option>
+                  <option value="Presbítero">Presbítero</option>
+                  <option value="Pastor Auxiliar">Pastor Auxiliar</option>
+                  <option value="Pastor Titular">Pastor Titular</option>
+                  <option value="Bispo / Apóstolo">Bispo / Apóstolo</option>
+                  <option value="Líder Denominacional">Líder Denominacional</option>
+                </select>
+              </div>
+              <span id="level-error" class="field-error"></span>
+            </div>
+
+            <div class="form-group">
+              <label for="team-size">Tamanho da Equipe Direta *</label>
+              <div class="field">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                <select id="team-size" onchange="validateForm()" onblur="validateForm()">
+                  <option value="">Selecione...</option>
+                  <option value="1-5">1 a 5 pessoas</option>
+                  <option value="6-15">6 a 15 pessoas</option>
+                  <option value="16-30">16 a 30 pessoas</option>
+                  <option value="31-50">31 a 50 pessoas</option>
+                  <option value="51-100">51 a 100 pessoas</option>
+                  <option value="100+">Mais de 100 pessoas</option>
+                </select>
+              </div>
+              <span id="team-error" class="field-error"></span>
+            </div>
+
+            <div class="form-group">
+              <label for="experience">Tempo de Experiência em Liderança Ministerial *</label>
+              <div class="field">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <select id="experience" onchange="validateForm()" onblur="validateForm()">
+                  <option value="">Selecione...</option>
+                  <option value="Menos de 1 ano">Menos de 1 ano</option>
+                  <option value="1 a 3 anos">1 a 3 anos</option>
+                  <option value="4 a 7 anos">4 a 7 anos</option>
+                  <option value="8 a 15 anos">8 a 15 anos</option>
+                  <option value="Mais de 15 anos">Mais de 15 anos</option>
+                </select>
+              </div>
+              <span id="exp-error" class="field-error"></span>
+            </div>
+          </div>
+
+          <div style="margin-top:24px; padding:20px; background:linear-gradient(135deg, #f4f9ff, #e6eefc); border:2px solid #d5e6fb; border-radius:14px;">
+            <h4 style="margin:0 0 6px; color:#063b7a; font-family:Arial,sans-serif; font-size:16px; font-weight:900; text-align:center;">🔐 Crie seu PIN de Acesso</h4>
+            <p style="margin:0 0 14px; color:#475569; font-size:13px; text-align:center;">Escolha 4 dígitos numéricos. Você usará esse PIN para acessar seu painel a qualquer momento.</p>
+
+            <label style="display:block; text-align:center; font-weight:800; color:#063b7a; margin-bottom:8px; font-size:14px; font-family:Arial,sans-serif;">PIN (4 dígitos) *</label>
+            <div class="pin-wrapper" id="signup-pin-wrapper">
+              <input type="tel" maxlength="1" class="pin-digit" data-pin="signup" data-index="0" inputmode="numeric" pattern="[0-9]" />
+              <input type="tel" maxlength="1" class="pin-digit" data-pin="signup" data-index="1" inputmode="numeric" pattern="[0-9]" />
+              <input type="tel" maxlength="1" class="pin-digit" data-pin="signup" data-index="2" inputmode="numeric" pattern="[0-9]" />
+              <input type="tel" maxlength="1" class="pin-digit" data-pin="signup" data-index="3" inputmode="numeric" pattern="[0-9]" />
+            </div>
+
+            <label style="display:block; text-align:center; font-weight:800; color:#063b7a; margin:14px 0 8px; font-size:14px; font-family:Arial,sans-serif;">Confirme seu PIN *</label>
+            <div class="pin-wrapper" id="signup-pin-confirm-wrapper">
+              <input type="tel" maxlength="1" class="pin-digit" data-pin="confirm" data-index="0" inputmode="numeric" pattern="[0-9]" />
+              <input type="tel" maxlength="1" class="pin-digit" data-pin="confirm" data-index="1" inputmode="numeric" pattern="[0-9]" />
+              <input type="tel" maxlength="1" class="pin-digit" data-pin="confirm" data-index="2" inputmode="numeric" pattern="[0-9]" />
+              <input type="tel" maxlength="1" class="pin-digit" data-pin="confirm" data-index="3" inputmode="numeric" pattern="[0-9]" />
+            </div>
+            <p id="pin-signup-error" class="pin-error"></p>
+            <p style="margin:0; font-size:12px; color:#64748b; text-align:center; font-style:italic;">💡 Dica: escolha um PIN fácil de lembrar, mas não óbvio (evite 1234 ou 0000).</p>
+          </div>
+
+          <div class="nav" style="justify-content:center; margin-top:32px; gap:14px;">
+            <button onclick="showStep('step-welcome')" class="btn btn-ghost" type="button" style="padding:14px 24px;">← Voltar</button>
+            <button id="start-btn" onclick="startSelfAssessment()" class="btn btn-primary" type="button" style="flex:1; max-width:380px; justify-content:center; padding:14px; font-size:16px;" disabled>
+              Iniciar Minha Autoavaliação
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ETAPA: AUTOAVALIAÇÃO -->
+      <section id="step-quiz" class="step">
+        <div class="topbar">
+          <div class="counter">Pergunta <span id="q-current">1</span> de 48</div>
+          <div class="progress-meta"><span id="answered-count">0</span>/48 respondidas</div>
+        </div>
+        <div class="progress-bar"><div id="progress-fill" class="progress-fill"></div></div>
+        <div class="card question-card">
+          <p id="question-pillar" class="question-pillar-tag"></p>
+          <p id="question-competence" class="question-competence"></p>
+          <p id="question-text" class="question-title"></p>
+          <p id="question-verse" class="question-verse"></p>
+          <p class="question-helper">Avalie em que nível de maturidade você demonstra esse comportamento, à luz da Palavra.</p>
+          <div id="options" class="options"></div>
+          <div class="nav">
+            <button id="btn-prev" class="btn btn-ghost" type="button" onclick="goPrev()">Anterior</button>
+            <button id="btn-next" class="btn btn-primary" type="button" onclick="goNext()">Próxima</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ETAPA: COMENTÁRIOS -->
+      <section id="step-comments" class="step">
+        <div class="instructions">
+          <p><strong>🙏 Reflexão final em oração.</strong></p>
+          <p>Agora, responda 3 perguntas abertas sobre sua autopercepção como líder cristão. Suas respostas serão comparadas com os comentários dos seus avaliadores no relatório final, à luz da Palavra.</p>
+        </div>
+        <div class="card" style="padding: 28px;">
+          <div class="form-group" style="margin-bottom:20px;">
+            <label for="q-strengths">💎 Quais você considera serem suas 3 maiores forças como líder cristão? *</label>
+            <textarea id="q-strengths" rows="4" placeholder="Descreva suas principais forças (caráter, dons, frutos do Espírito, marcas de Cristo)..." style="width:100%; padding:14px; border:1.5px solid rgba(11,99,206,.28); border-radius:12px; font-size:15px; font-family:'Poppins',sans-serif; resize:vertical;"></textarea>
+          </div>
+          <div class="form-group" style="margin-bottom:20px;">
+            <label for="q-improvements">🌱 Quais áreas você sente que mais precisa desenvolver? *</label>
+            <textarea id="q-improvements" rows="4" placeholder="Descreva áreas de crescimento na sua vida e ministério, à luz da Palavra..." style="width:100%; padding:14px; border:1.5px solid rgba(11,99,206,.28); border-radius:12px; font-size:15px; font-family:'Poppins',sans-serif; resize:vertical;"></textarea>
+          </div>
+          <div class="form-group" style="margin-bottom:20px;">
+            <label for="q-impact">✨ Que tipo de legado você quer deixar como líder no Reino? *</label>
+            <textarea id="q-impact" rows="4" placeholder="Descreva o legado eterno que deseja construir para a glória de Deus..." style="width:100%; padding:14px; border:1.5px solid rgba(11,99,206,.28); border-radius:12px; font-size:15px; font-family:'Poppins',sans-serif; resize:vertical;"></textarea>
+          </div>
+          <div class="nav">
+            <button class="btn btn-ghost" type="button" onclick="showStep('step-quiz')">Voltar</button>
+            <button id="btn-finish" class="btn btn-primary" type="button" onclick="finishSelfAssessment()">Finalizar e Gerar Código</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ETAPA: COMPARTILHAMENTO -->
+      <section id="step-share" class="step">
+        <div style="text-align:center; margin-bottom:14px;">
+          <h2 style="font-size:24px; font-weight:900; color:#063b7a; font-family:Arial,sans-serif; margin:0;">✅ Autoavaliação Concluída!</h2>
+          <p style="color:var(--muted); margin-top:8px;">Agora é hora de convidar seus avaliadores. Compartilhe o código e o link abaixo.</p>
+          <p id="save-status" class="status status-pending">⏳ Salvando seus dados...</p>
+        </div>
+
+        <div class="code-box">
+          <div class="code-label">Seu Código Único de Avaliação</div>
+          <div class="code-value" id="leader-code">---</div>
+          <div class="code-link" id="evaluator-link">https://...</div>
+        </div>
+
+        <div class="min-highlight">
+          <div class="big-num">3</div>
+          <div class="label">Avaliadores Mínimos</div>
+          <div class="desc">Você precisa de pelo menos 3 pessoas avaliando para gerar seu relatório executivo Plenitude IEC™.</div>
+        </div>
+
+        <div class="invite-card">
+          <h4>📩 Como convidar seus avaliadores</h4>
+          <p>Copie o link abaixo e envie por WhatsApp, e-mail ou pessoalmente para seu superior, pares ministeriais e liderados. Cada um responderá de forma 100% anônima.</p>
+          <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:12px;">
+            <button class="btn btn-primary" onclick="copyLink()">📋 Copiar Link</button>
+            <button class="btn btn-ghost" onclick="shareWhatsApp()">📱 WhatsApp</button>
+            <button class="btn btn-ghost" onclick="shareEmail()">📧 E-mail</button>
+          </div>
+        </div>
+
+        <div class="return-info">
+          <h4>⚠️ Importante: Como voltar ao seu painel</h4>
+          <p>Anote suas credenciais! Você usará para acessar seu painel quando quiser:</p>
+          <div class="credentials-box">
+            <p style="margin:0 0 6px;"><strong>📧 E-mail:</strong> <span id="saved-email">---</span></p>
+            <p style="margin:0;"><strong>🔑 PIN:</strong> aquele que você criou no cadastro</p>
+          </div>
+          <p style="margin-top:12px;">Você receberá um e-mail de confirmação com essas informações. Guarde com carinho! 💙</p>
+        </div>
+
+        <div class="tip-card">
+          <h5>💡 Dicas para maximizar sua avaliação</h5>
+          <ul>
+            <li>Convide pessoas com diferentes níveis de relacionamento (superior, pares, liderados)</li>
+            <li>Mínimo: 3 avaliadores | Ideal: 5 a 10 avaliadores | Máximo: 30</li>
+            <li>Dê um prazo claro (ex: "Por favor, responda até sexta-feira")</li>
+            <li>Reforce o anonimato: ninguém saberá o que cada pessoa respondeu</li>
+            <li>Ore por cada um dos avaliadores antes de enviar o convite</li>
+          </ul>
+        </div>
+
+        <div class="verse-quote-mini">
+          "Como o ferro com ferro se afia, assim o homem afia o seu próximo."
+          <span class="ref">— Provérbios 27:17</span>
+        </div>
+
+        <div class="nav" style="justify-content:center; margin-top:18px;">
+          <button class="btn btn-primary" onclick="goToDashboard()" style="padding:14px 30px; font-size:15px;">
+            🚀 Acessar Meu Painel
+          </button>
+        </div>
+
+        <p class="signature">Pr. Roger - amavroger@gmail.com</p>
+        <p class="footer">✨ Plenitude IEC™ | Discipulado 360°</p>
+      </section>
+
+      <!-- ETAPA: PAINEL PÓS-LOGIN -->
+      <section id="step-dashboard" class="step">
+        <div class="dashboard-hero">
+          <span class="user-tag">Painel do Líder</span>
+          <h2 id="dash-name">Olá, Líder!</h2>
+          <p id="dash-role">Acompanhe o status da sua avaliação 360°.</p>
+        </div>
+
+        <div class="status-block">
+          <h3>📊 Status da sua Avaliação</h3>
+          <div class="status-bar">
+            <div id="dash-status-fill" class="status-fill" style="width:0%;">0/30</div>
+          </div>
+          <div class="status-info">
+            <span id="dash-evaluators-count">0 avaliadores responderam</span>
+            <span id="dash-status-label">⏳ Aguardando avaliações</span>
+          </div>
+          <p style="margin:14px 0 0; font-size:13px; color:#475569;" id="dash-message">
+            Você precisa de pelo menos 3 avaliadores para gerar o relatório executivo. O sistema aceita até 30 avaliadores.
+          </p>
+        </div>
+
+        <div class="status-block">
+          <h3>🔗 Compartilhar Código</h3>
+          <div class="code-box" style="margin:0;">
+            <div class="code-label">Seu Código de Avaliação</div>
+            <div class="code-value" id="dash-leader-code">---</div>
+            <div class="code-link" id="dash-evaluator-link">https://...</div>
+          </div>
+          <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:14px;">
+            <button class="btn btn-primary" onclick="copyLink()">📋 Copiar Link</button>
+            <button class="btn btn-ghost" onclick="shareWhatsApp()">📱 WhatsApp</button>
+            <button class="btn btn-ghost" onclick="shareEmail()">📧 E-mail</button>
+          </div>
+        </div>
+
+        <!-- 📊 GRÁFICOS DO PAINEL (Plenitude IEC™) -->
+        <div id="dash-charts" class="dashboard-charts-grid" style="display:none;">
+          <div class="chart-card-dash">
+            <h3>📊 Radar das 8 Competências</h3>
+            <p class="chart-sub">Sua autopercepção × Avaliadores</p>
+            <div class="chart-wrapper-dash">
+              <canvas id="dash-radar-chart"></canvas>
+            </div>
+          </div>
+          <div class="chart-card-dash">
+            <h3>🎯 Distribuição por Pilar</h3>
+            <p class="chart-sub">Caráter • Competência • Comunhão</p>
+            <div class="chart-wrapper-dash">
+              <canvas id="dash-donut-chart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <div class="actions-grid">
+          <button id="btn-generate-pdf" class="action-btn primary" onclick="generatePDF()" disabled>
+            <span class="ab-icon">📄</span>
+            <div class="ab-text">
+              <div class="ab-title">Gerar Relatório PDF</div>
+              <div class="ab-desc" id="pdf-desc">Disponível com 3+ avaliadores</div>
+            </div>
+          </button>
+          <button class="action-btn" onclick="refreshDashboard()">
+            <span class="ab-icon">🔄</span>
+            <div class="ab-text">
+              <div class="ab-title">Atualizar Status</div>
+              <div class="ab-desc">Verificar novas avaliações</div>
+            </div>
+          </button>
+          <button class="action-btn" onclick="closeEvaluation()">
+            <span class="ab-icon">🔒</span>
+            <div class="ab-text">
+              <div class="ab-title">Encerrar Avaliação</div>
+              <div class="ab-desc">Bloquear novos avaliadores</div>
+            </div>
+          </button>
+          <button class="action-btn danger" onclick="logoutDashboard()">
+            <span class="ab-icon">🚪</span>
+            <div class="ab-text">
+              <div class="ab-title">Sair</div>
+              <div class="ab-desc">Encerrar sessão</div>
+            </div>
+          </button>
+        </div>
+
+        <div class="verse-quote-mini">
+          "Aquele que começou a boa obra em vós há de completá-la até o Dia de Cristo Jesus."
+          <span class="ref">— Filipenses 1:6</span>
+        </div>
+
+        <p class="signature">Pr. Roger - amavroger@gmail.com</p>
+        <p class="footer">✨ Plenitude IEC™ | Discipulado 360°</p>
+      </section>
+
+    </div>
+  </div>
+
+  <script>
+// ⚠️ SUBSTITUA pela URL do seu Web App (após publicar o Code.gs)
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycby9UZmQcl9kFDmnmAlY9bnTD4dEv8h4LCi99F8Jz42YiDZm12Xjk_07ajrwJwnCW74KhQ/exec";
+const API_KEY = "2026Plenitude360$";
+const EVALUATOR_BASE_URL = "https://amavroger-hue.github.io/Avaliador2/";
+const MIN_EVALUATORS = 3;
+const MAX_EVALUATORS = 30; // 🆕 Limite máximo da barra de progresso
+
+// 🎨 Ativa labels DENTRO dos gráficos (premium!)
+if (window.ChartDataLabels) Chart.register(window.ChartDataLabels);
+
+// 🏛️ COMPETÊNCIAS PLENITUDE IEC™ (3 PILARES × 8 COMPETÊNCIAS)
+const competencies = [
+  { id: 'C1', name: '🙏 Vida Espiritual',              pillar: 'CARÁTER',     color: '#cc0000' },
+  { id: 'C2', name: '💚 Inteligência Emocional Cristã', pillar: 'CARÁTER',     color: '#d97706' },
+  { id: 'C3', name: '📖 Pregação e Ensino',            pillar: 'COMPETÊNCIA', color: '#005ce6' },
+  { id: 'C4', name: '🤲 Cuidado e Acolhimento',        pillar: 'COMPETÊNCIA', color: '#00994d' },
+  { id: 'C5', name: '👑 Liderança Servidora',          pillar: 'COMPETÊNCIA', color: '#7c3aed' },
+  { id: 'C6', name: '🌱 Discipulado e Multiplicação',  pillar: 'COMPETÊNCIA', color: '#db2777' },
+  { id: 'C7', name: '🤝 Comunhão e Trabalho em Equipe', pillar: 'COMUNHÃO',    color: '#0891b2' },
+  { id: 'C8', name: '🌍 Missão e Visão de Reino',      pillar: 'COMUNHÃO',    color: '#ea580c' }
+];
+
+// 📋 48 PERGUNTAS PLENITUDE IEC™ — AUTOAVALIAÇÃO (1ª PESSOA)
+const questions = [
+  // 🙏 C1 — VIDA ESPIRITUAL
+  { c: 'C1', t: 'Mantenho uma vida devocional pessoal consistente (oração, leitura bíblica, adoração) como prioridade na minha rotina.', v: 'Sl 5:3 — "De madrugada, Senhor, ouvirás a minha voz."' },
+  { c: 'C1', t: 'Permito que a Palavra governe minhas decisões e atitudes, submetendo-me a ela com naturalidade no dia a dia.', v: 'Sl 119:105 — "Lâmpada para os meus pés é a tua palavra."' },
+  { c: 'C1', t: 'Recorro à oração antes de decisões, conflitos e ministérios, demonstrando dependência prática de Deus em vez de confiar nas minhas forças.', v: '1 Ts 5:17 — "Orai sem cessar."' },
+  { c: 'C1', t: 'Demonstro sensibilidade à direção do Espírito Santo no ministério e no dia a dia, ajustando meus planos quando percebo a voz de Deus.', v: 'Zc 4:6 — "Não por força, nem por violência, mas pelo meu Espírito."' },
+  { c: 'C1', t: 'Participo ativamente da vida da igreja local (cultos, ceia, comunhão, ministério) com alegria e compromisso, não por obrigação.', v: 'Hb 10:25 — "Não deixemos de congregar-nos."' },
+  { c: 'C1', t: 'Mantenho coerência entre o que ensino/prego e como vivo, sendo a mesma pessoa em público, em casa e quando ninguém está vendo.', v: 'Tg 1:22 — "Sede cumpridores da palavra e não somente ouvintes."' },
+
+  // 💚 C2 — INTELIGÊNCIA EMOCIONAL CRISTÃ
+  { c: 'C2', t: 'Demonstro autoconsciência emocional, reconhecendo meus próprios sentimentos e gatilhos antes de reagir a situações.', v: 'Sl 139:23 — "Sonda-me, ó Deus, e conhece o meu coração."' },
+  { c: 'C2', t: 'Mantenho autodomínio emocional sob pressão ministerial, sem explosões, retraimentos ou reações impulsivas.', v: 'Pv 16:32 — "Melhor é o longânimo do que o herói da guerra."' },
+  { c: 'C2', t: 'Demonstro empatia genuína, entrando na dor e na alegria do outro com sensibilidade pastoral, sem julgamentos precipitados.', v: 'Rm 12:15 — "Alegrai-vos com os que se alegram e chorai com os que choram."' },
+  { c: 'C2', t: 'Lido com conflitos buscando reconciliação ativa, conversa direta e restauração, em vez de fugir, atacar ou silenciar.', v: 'Mt 18:15 — "Vai e repreende-o entre ti e ele só."' },
+  { c: 'C2', t: 'Recebo críticas e correções com humildade, sem me defender de imediato, considerando-as como instrumentos do Senhor para crescimento.', v: 'Pv 27:6 — "Fiéis são as feridas feitas pelo amigo."' },
+  { c: 'C2', t: 'Demonstro resiliência espiritual em meio a frustrações, perdas ou esperas longas, ancorando-me na bondade e soberania de Deus.', v: 'Rm 5:3-4 — "A tribulação produz perseverança."' },
+
+  // 📖 C3 — PREGAÇÃO E ENSINO
+  { c: 'C3', t: 'Prego e ensino mantendo fidelidade ao texto bíblico, sem distorcer, descontextualizar ou usar a Palavra para sustentar opiniões pessoais.', v: '2 Tm 2:15 — "Maneja bem a palavra da verdade."' },
+  { c: 'C3', t: 'Comunico a Palavra de forma clara e organizada, tornando verdades profundas compreensíveis para diferentes idades e níveis de maturidade.', v: 'Ne 8:8 — "Liam no livro... interpretavam, dando o sentido."' },
+  { c: 'C3', t: 'Conduzo os ouvintes da explicação do texto à aplicação prática na vida cotidiana (família, trabalho, relacionamentos, decisões).', v: 'Tg 1:22 — "Sede cumpridores da palavra."' },
+  { c: 'C3', t: 'Demonstro dependência do Espírito Santo na pregação, sem confiar apenas em técnica, eloquência ou preparo intelectual.', v: '1 Co 2:4 — "Em demonstração do Espírito e de poder."' },
+  { c: 'C3', t: 'Dedico tempo consistente ao estudo bíblico, oração e preparação antes de pregar ou ensinar, evitando improvisações superficiais.', v: 'Ed 7:10 — "Esdras dispôs o coração para buscar a Lei do Senhor."' },
+  { c: 'C3', t: 'Ensino percebendo o nível, as dores e o contexto do ouvinte, ajustando linguagem e exemplos para gerar conexão e transformação real.', v: '1 Co 9:22 — "Fiz-me tudo para com todos, para salvar alguns."' },
+
+  // 🤲 C4 — CUIDADO E ACOLHIMENTO
+  { c: 'C4', t: 'Conheço pelo nome, história e necessidades as pessoas que pastoreio, demonstrando que cada uma é vista, lembrada e valorizada.', v: 'Pv 27:23 — "Conhece bem o estado das tuas ovelhas."' },
+  { c: 'C4', t: 'Escuto com presença e paciência, sem pressa de responder, dar conselhos ou citar versículos antes de compreender a situação completa.', v: 'Tg 1:19 — "Pronto para ouvir, tardio para falar."' },
+  { c: 'C4', t: 'Estou acessível e disponível para as pessoas em momentos importantes (celebrações, dificuldades, decisões), dentro de limites saudáveis.', v: 'Gl 6:2 — "Levai as cargas uns dos outros."' },
+  { c: 'C4', t: 'Acompanho pessoas em momentos de crise (luto, doença, separação, depressão), oferecendo presença, oração e cuidado contínuo, não apenas pontual.', v: '2 Co 1:3-4 — "Deus que nos consola em toda a nossa tribulação."' },
+  { c: 'C4', t: 'Acolho novos visitantes, recém-convertidos e pessoas marcadas por feridas espirituais sem julgamento, criando ambiente seguro para crescerem.', v: 'Rm 15:7 — "Recebei-vos uns aos outros, como também Cristo nos recebeu."' },
+  { c: 'C4', t: 'Preservo confidências recebidas no cuidado pastoral, demonstrando integridade ética e construindo confiança junto às pessoas.', v: 'Pv 11:13 — "O fiel de espírito encobre o segredo."' },
+
+  // 👑 C5 — LIDERANÇA SERVIDORA
+  { c: 'C5', t: 'Lidero com postura de servo, envolvendo-me em tarefas comuns e tratando todos com dignidade, sem usar a posição como privilégio ou status.', v: 'Mt 20:26-27 — "Quem quiser tornar-se grande entre vós, será esse o que vos sirva."' },
+  { c: 'C5', t: 'Comunico visão, prioridades e direção com clareza, ajudando a equipe a entender para onde estamos indo e por quê.', v: 'Pv 29:18 — "Não havendo profecia, o povo se corrompe."' },
+  { c: 'C5', t: 'Delego responsabilidades de forma clara, confio na equipe e evito centralizar tarefas que outros poderiam executar com excelência.', v: 'Êx 18:21 — "Procura, dentre o povo, homens capazes."' },
+  { c: 'C5', t: 'Tomo decisões com sabedoria, oração e conselho, assumindo responsabilidade pelos resultados sem culpar circunstâncias ou terceiros.', v: 'Tg 1:5 — "Se algum tem falta de sabedoria, peça-a a Deus."' },
+  { c: 'C5', t: 'Invisto tempo e atenção em formar novos líderes, oferecendo mentoria, oportunidades reais de protagonismo e feedback construtivo.', v: '2 Tm 2:2 — "Transmite a homens fiéis e idôneos para instruir a outros."' },
+  { c: 'C5', t: 'Demonstro submissão saudável às autoridades espirituais e estruturas da igreja, sem rebeldia oculta, murmuração ou independência ministerial.', v: 'Hb 13:17 — "Obedecei aos vossos guias e sede submissos."' },
+
+  // 🌱 C6 — DISCIPULADO E MULTIPLICAÇÃO
+  { c: 'C6', t: 'Invisto tempo intencional no discipulado de pessoas específicas (não apenas em pregação geral), com encontros, acompanhamento e oração regulares.', v: 'Mt 5:1-2 — "Chegando-se a ele os discípulos, abriu a boca e os ensinava."' },
+  { c: 'C6', t: 'Permito que discípulos acompanhem minha vida real (família, decisões, lutas, vitórias), ensinando mais pelo exemplo do que apenas por palavras.', v: '1 Co 11:1 — "Sede meus imitadores, como também eu sou de Cristo."' },
+  { c: 'C6', t: 'Equipo discípulos com Palavra, ferramentas e práticas espirituais (oração, leitura, evangelismo, serviço), formando crentes maduros e autônomos em Cristo.', v: '2 Tm 3:16-17 — "Toda Escritura é útil para o ensino, repreensão, correção..."' },
+  { c: 'C6', t: 'Formo discípulos que também discipulam outros, gerando multiplicação real de gerações espirituais (filhos, netos e bisnetos na fé).', v: '2 Tm 2:2 — "Transmite a homens fiéis... idôneos para instruir a outros."' },
+  { c: 'C6', t: 'Conduzo discípulos a uma visão de Reino que ultrapassa os muros da igreja local, formando crentes que evangelizam, servem e impactam a sociedade.', v: 'Mc 16:15 — "Ide por todo o mundo e pregai o evangelho."' },
+  { c: 'C6', t: 'Mantenho relacionamento contínuo e de longo prazo com discípulos, acompanhando seu crescimento ao longo do tempo, e não apenas em fases iniciais.', v: 'Mt 28:20 — "Eis que estou convosco todos os dias."' },
+
+  // 🤝 C7 — COMUNHÃO E TRABALHO EM EQUIPE
+  { c: 'C7', t: 'Cultivo relacionamentos saudáveis e duradouros com colegas de ministério, demonstrando confiança, transparência e cuidado mútuo.', v: 'Pv 18:24 — "Há amigo mais chegado do que um irmão."' },
+  { c: 'C7', t: 'Trabalho em equipe com naturalidade, integrando ideias dos outros, dividindo o crédito e celebrando vitórias coletivas em vez de individuais.', v: 'Ec 4:9-10 — "Melhor é serem dois do que um."' },
+  { c: 'C7', t: 'Convivo com pessoas de personalidades, gerações, estilos e opiniões diferentes, valorizando a diversidade como riqueza do corpo de Cristo.', v: '1 Co 12:12 — "O corpo é um e tem muitos membros."' },
+  { c: 'C7', t: 'Reconheço e valorizo publicamente as contribuições dos outros, sem competir, ofuscar ou centralizar méritos em mim mesmo.', v: 'Fp 2:3 — "Considerando cada um os outros superiores a si mesmo."' },
+  { c: 'C7', t: 'Demonstro lealdade aos colegas e à liderança, defendendo-os na ausência, evitando fofoca e protegendo a reputação dos irmãos.', v: 'Pv 17:17 — "Em todo tempo ama o amigo."' },
+  { c: 'C7', t: 'Cultivo comunhão genuína (koinonia) com irmãos além do ambiente formal de igreja — partilhando refeições, lares, alegrias e dores da vida cotidiana.', v: 'At 2:42 — "Perseveravam na doutrina dos apóstolos e na comunhão."' },
+
+  // 🌍 C8 — MISSÃO E VISÃO DE REINO
+  { c: 'C8', t: 'Demonstro paixão e oração genuína por pessoas não convertidas, evidenciando que evangelismo é prioridade do meu coração e não obrigação ministerial.', v: 'Pv 11:30 — "Quem ganha almas é sábio."' },
+  { c: 'C8', t: 'Compartilho o evangelho de forma natural com pessoas do convívio diário (família, vizinhos, trabalho), com mansidão, sabedoria e oportunidade.', v: '1 Pe 3:15 — "Estai sempre preparados para responder."' },
+  { c: 'C8', t: 'Mobilizo a igreja para impactar a comunidade local com ações práticas (escola, projeto social, acolhimento, presença pública), tornando o evangelho visível.', v: 'Mt 5:13-14 — "Vós sois o sal da terra... a luz do mundo."' },
+  { c: 'C8', t: 'Demonstro compaixão prática com pobres, doentes, presos, crianças vulneráveis e excluídos, envolvendo-me pessoalmente em ações de misericórdia.', v: 'Tg 1:27 — "Visitar os órfãos e as viúvas nas suas tribulações."' },
+  { c: 'C8', t: 'Cultivo visão e envolvimento com missões transculturais (oração, ofertas, envio, mobilização), entendendo a igreja local como base da missão global.', v: 'Mt 24:14 — "Será pregado este evangelho... a todas as nações."' },
+  { c: 'C8', t: 'Vivo e ensino que o senhorio de Cristo alcança todas as áreas (família, trabalho, política, cultura, ciência), formando crentes que são luz onde estão.', v: 'Mt 6:10 — "Venha o teu reino, faça-se a tua vontade."' }
+];
+
+const TOTAL_Q = questions.length;
+const responses = new Array(TOTAL_Q).fill(null);
+let current = 0;
+let leaderCode = null;
+let leaderData = {};
+let signupPin = '';
+let dashboardData = null;
+let radarChartInstance = null;
+let donutChartInstance = null;
+
+// 📐 ESCALA PLENITUDE IEC™
+const scaleOptions = [
+  { num: 1, emoji: '🌱', label: 'Iniciante',          desc: 'Quase nunca demonstro' },
+  { num: 2, emoji: '🌿', label: 'Em Desenvolvimento', desc: 'Demonstro raramente' },
+  { num: 3, emoji: '🌳', label: 'Consistente',        desc: 'Demonstro com regularidade' },
+  { num: 4, emoji: '🌲', label: 'Maduro',             desc: 'Demonstro com profundidade' },
+  { num: 5, emoji: '✨', label: 'Exemplar',           desc: 'Modelo inspirador' }
+];
+
+// ═══════════════════════════════════════════════════════
+// INICIALIZAÇÃO
+// ═══════════════════════════════════════════════════════
+window.addEventListener('DOMContentLoaded', () => {
+  setupPinInputs();
+});
+
+function showStep(stepId) {
+  document.querySelectorAll(".step").forEach(s => s.classList.remove("active"));
+  document.getElementById(stepId).classList.add("active");
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+// ═══════════════════════════════════════════════════════
+// PIN — INPUTS DE 4 DÍGITOS
+// ═══════════════════════════════════════════════════════
+function setupPinInputs() {
+  document.querySelectorAll('.pin-digit').forEach(input => {
+    input.addEventListener('input', (e) => {
+      const val = e.target.value.replace(/\D/g, '');
+      e.target.value = val;
+      if (val) {
+        e.target.classList.add('filled');
+        const next = e.target.parentElement.querySelector(`[data-index="${parseInt(e.target.dataset.index) + 1}"]`);
+        if (next) next.focus();
+      } else {
+        e.target.classList.remove('filled');
+      }
+      validateForm();
+    });
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Backspace' && !e.target.value) {
+        const prev = e.target.parentElement.querySelector(`[data-index="${parseInt(e.target.dataset.index) - 1}"]`);
+        if (prev) prev.focus();
+      }
+    });
+    input.addEventListener('paste', (e) => {
+      e.preventDefault();
+      const paste = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '').slice(0, 4);
+      const wrapper = e.target.parentElement;
+      const inputs = wrapper.querySelectorAll('.pin-digit');
+      paste.split('').forEach((char, i) => {
+        if (inputs[i]) {
+          inputs[i].value = char;
+          inputs[i].classList.add('filled');
+        }
+      });
+      validateForm();
+    });
+  });
+}
+
+function getPinValue(wrapperId) {
+  const wrapper = document.getElementById(wrapperId);
+  if (!wrapper) return '';
+  return Array.from(wrapper.querySelectorAll('.pin-digit')).map(i => i.value).join('');
+}
+
+function clearPin(wrapperId) {
+  const wrapper = document.getElementById(wrapperId);
+  if (!wrapper) return;
+  wrapper.querySelectorAll('.pin-digit').forEach(i => {
+    i.value = '';
+    i.classList.remove('filled');
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// MÁSCARAS E VALIDAÇÕES
+// ═══════════════════════════════════════════════════════
+function maskWhatsApp(input) {
+  let v = input.value.replace(/\D/g, '');
+  if (v.length > 11) v = v.slice(0, 11);
+  if (v.length > 6) v = v.replace(/^(\d{2})(\d{5})(\d{0,4}).*/, '($1) $2-$3');
+  else if (v.length > 2) v = v.replace(/^(\d{2})(\d{0,5}).*/, '($1) $2');
+  else if (v.length > 0) v = v.replace(/^(\d{0,2})/, '($1');
+  input.value = v;
+}
+
+function isValidEmail(e) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
+function isValidWhatsApp(w) { return w.replace(/\D/g, '').length >= 10; }
+
+function validateForm() {
+  const fields = ['name', 'email', 'whatsapp', 'company', 'position', 'level', 'team-size', 'experience'];
+  let allFilled = true;
+  fields.forEach(id => {
+    const el = document.getElementById(id);
+    if (el && !el.value.trim()) allFilled = false;
+  });
+  const email = document.getElementById('email')?.value || '';
+  const wa = document.getElementById('whatsapp')?.value || '';
+  if (email && !isValidEmail(email)) allFilled = false;
+  if (wa && !isValidWhatsApp(wa)) allFilled = false;
+
+  const pin = getPinValue('signup-pin-wrapper');
+  const pinConfirm = getPinValue('signup-pin-confirm-wrapper');
+  const pinErr = document.getElementById('pin-signup-error');
+  if (pin.length === 4 && pinConfirm.length === 4) {
+    if (pin !== pinConfirm) {
+      pinErr.textContent = '❌ Os PINs não coincidem';
+      allFilled = false;
+    } else if (['1234', '0000', '1111', '2222', '3333', '4444', '5555', '6666', '7777', '8888', '9999'].includes(pin)) {
+      pinErr.textContent = '⚠️ Escolha um PIN menos óbvio';
+      allFilled = false;
+    } else {
+      pinErr.textContent = '';
+    }
+  } else {
+    if (pinErr) pinErr.textContent = '';
+    allFilled = false;
+  }
+
+  const btn = document.getElementById('start-btn');
+  if (btn) btn.disabled = !allFilled;
+}
+
+// ═══════════════════════════════════════════════════════
+// CADASTRO E AUTOAVALIAÇÃO
+// ═══════════════════════════════════════════════════════
+function startSelfAssessment() {
+  leaderData = {
+    name: document.getElementById('name').value.trim(),
+    email: document.getElementById('email').value.trim().toLowerCase(),
+    whatsapp: document.getElementById('whatsapp').value.trim(),
+    company: document.getElementById('company').value.trim(),
+    position: document.getElementById('position').value.trim(),
+    level: document.getElementById('level').value,
+    teamSize: document.getElementById('team-size').value,
+    experience: document.getElementById('experience').value
+  };
+  signupPin = getPinValue('signup-pin-wrapper');
+  current = 0;
+  showStep('step-quiz');
+  renderQuestion();
+}
+
+function renderQuestion() {
+  const q = questions[current];
+  const comp = competencies.find(c => c.id === q.c);
+  document.getElementById("q-current").textContent = current + 1;
+  document.getElementById("question-pillar").textContent = `🏛️ Pilar: ${comp.pillar}`;
+  document.getElementById("question-competence").textContent = comp.name;
+  document.getElementById("question-competence").style.color = comp.color;
+  document.getElementById("question-text").textContent = q.t;
+  document.getElementById("question-verse").textContent = q.v ? `📖 ${q.v}` : '';
+
+  const optsContainer = document.getElementById("options");
+  optsContainer.innerHTML = "";
+  scaleOptions.forEach(opt => {
+    const btn = document.createElement("div");
+    btn.className = "opt" + (responses[current] === opt.num ? " selected" : "");
+    btn.innerHTML = `
+      <div class="opt-emoji">${opt.emoji}</div>
+      <div class="opt-num">${opt.num}</div>
+      <small>${opt.label}</small>
+      <div class="opt-desc">${opt.desc}</div>
+    `;
+    btn.onclick = () => selectOption(opt.num);
+    optsContainer.appendChild(btn);
+  });
+  updateProgress();
+  document.getElementById("btn-prev").disabled = current === 0;
+  document.getElementById("btn-next").textContent = current === TOTAL_Q - 1 ? "Concluir" : "Próxima";
+}
+
+function selectOption(value) {
+  responses[current] = value;
+  renderQuestion();
+  setTimeout(() => { if (current < TOTAL_Q - 1) goNext(); }, 280);
+}
+
+function goNext() {
+  if (responses[current] === null) { alert("Por favor, selecione uma resposta antes de prosseguir."); return; }
+  if (current < TOTAL_Q - 1) { current++; renderQuestion(); }
+  else { showStep("step-comments"); }
+}
+
+function goPrev() {
+  if (current > 0) { current--; renderQuestion(); }
+}
+
+function updateProgress() {
+  const answered = responses.filter(r => r !== null).length;
+  const pct = (answered / TOTAL_Q) * 100;
+  document.getElementById("progress-fill").style.width = pct + "%";
+  document.getElementById("answered-count").textContent = answered;
+}
+
+async function finishSelfAssessment() {
+  const strengths = document.getElementById("q-strengths").value.trim();
+  const improvements = document.getElementById("q-improvements").value.trim();
+  const impact = document.getElementById("q-impact").value.trim();
+  if (!strengths || !improvements || !impact) {
+    alert("Por favor, responda todas as 3 reflexões finais.");
+    return;
+  }
+
+  const btn = document.getElementById('btn-finish');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="loading-spinner"></span> Gerando código...';
+
+  leaderCode = 'PLN-' + Math.random().toString(36).substring(2, 7).toUpperCase();
+
+  const payload = {
+    apiKey: API_KEY,
+    action: "createLeader",
+    leader: {
+      ...leaderData,
+      code: leaderCode,
+      pin: signupPin,
+      timestamp: new Date().toISOString(),
+      selfAssessment: { responses, strengths, improvements, impact }
+    }
+  };
+
+  showStep('step-share');
+  document.getElementById('leader-code').textContent = leaderCode;
+  const link = `${EVALUATOR_BASE_URL}?codigo=${leaderCode}`;
+  document.getElementById('evaluator-link').textContent = link;
+  document.getElementById('saved-email').textContent = leaderData.email;
+
+  try {
+    await postToScript(payload);
+    document.getElementById('save-status').textContent = '✅ Dados salvos com sucesso!';
+    document.getElementById('save-status').className = 'status status-success';
+  } catch (err) {
+    console.error(err);
+    document.getElementById('save-status').textContent = '⚠️ Houve um erro ao salvar — tente novamente';
+    document.getElementById('save-status').className = 'status status-error';
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// COMPARTILHAMENTO
+// ═══════════════════════════════════════════════════════
+function copyLink() {
+  const link = `${EVALUATOR_BASE_URL}?codigo=${leaderCode || dashboardData?.code}`;
+  navigator.clipboard.writeText(link).then(() => {
+    alert('✅ Link copiado! Cole onde quiser para enviar aos avaliadores.');
+  });
+}
+
+function shareWhatsApp() {
+  const code = leaderCode || dashboardData?.code;
+  const link = `${EVALUATOR_BASE_URL}?codigo=${code}`;
+  const name = leaderData.name || dashboardData?.name || 'um(a) líder';
+  const msg = `🙏 *Convite Plenitude IEC™*\n\nOlá! Você foi convidado(a) a participar do Discipulado 360° de *${name}*.\n\nÉ uma avaliação cristã anônima, baseada na Palavra, que ajudará no crescimento ministerial.\n\n📋 *Código:* ${code}\n🔗 *Link:* ${link}\n\nLeva ~15 minutos. Que Deus o(a) abençoe! ✝️`;
+  window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+}
+
+function shareEmail() {
+  const code = leaderCode || dashboardData?.code;
+  const link = `${EVALUATOR_BASE_URL}?codigo=${code}`;
+  const name = leaderData.name || dashboardData?.name || 'um(a) líder';
+  const subject = `Convite Plenitude IEC™ — Discipulado 360° de ${name}`;
+  const body = `Olá!\n\nVocê foi convidado(a) a participar do Discipulado 360° de ${name} — uma avaliação cristã anônima baseada na Palavra.\n\nCódigo: ${code}\nLink: ${link}\n\nLeva ~15 minutos. Que Deus o(a) abençoe!\n\n— Plenitude IEC™`;
+  window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+}
+
+function goToDashboard() {
+  document.getElementById('login-email').value = leaderData.email;
+  loadDashboard(leaderData.email, signupPin);
+}
+
+// ═══════════════════════════════════════════════════════
+// LOGIN E PAINEL
+// ═══════════════════════════════════════════════════════
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim().toLowerCase();
+  const pin = getPinValue('login-pin-wrapper');
+  const errEl = document.getElementById('login-error');
+  errEl.textContent = '';
+
+  if (!email || !isValidEmail(email)) { errEl.textContent = '❌ Informe um e-mail válido'; return; }
+  if (pin.length !== 4) { errEl.textContent = '❌ Informe os 4 dígitos do PIN'; return; }
+
+  const btn = document.getElementById('btn-login');
+  const original = btn.innerHTML;
+  btn.innerHTML = '<span class="loading-spinner"></span> Validando...';
+  btn.disabled = true;
+
+  await loadDashboard(email, pin, errEl, btn, original);
+}
+
+async function loadDashboard(email, pin, errEl, btn, originalBtnText) {
+  try {
+    const url = `${WEB_APP_URL}?action=loginLeader&apiKey=${encodeURIComponent(API_KEY)}&email=${encodeURIComponent(email)}&pin=${encodeURIComponent(pin)}`;
+    const response = await fetch(url);
+    const data = await response.json();
+
+    if (data.ok && data.leader) {
+      dashboardData = data.leader;
+      renderDashboard();
+      showStep('step-dashboard');
+      clearPin('login-pin-wrapper');
+    } else {
+      if (errEl) errEl.textContent = data.error || '❌ E-mail ou PIN inválidos';
+      if (btn) { btn.innerHTML = originalBtnText; btn.disabled = false; }
+    }
+  } catch (err) {
+    console.error(err);
+    if (errEl) errEl.textContent = '❌ Erro de conexão. Tente novamente.';
+    if (btn) { btn.innerHTML = originalBtnText; btn.disabled = false; }
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// 🆕 RENDER DASHBOARD COM BARRA ATÉ 30 + MARCADOR NO 3
+// ═══════════════════════════════════════════════════════
+function renderDashboard() {
+  if (!dashboardData) return;
+  document.getElementById('dash-name').textContent = `Olá, ${dashboardData.name}!`;
+  document.getElementById('dash-role').textContent = `${dashboardData.position} | ${dashboardData.company}`;
+  document.getElementById('dash-leader-code').textContent = dashboardData.code;
+  const link = `${EVALUATOR_BASE_URL}?codigo=${dashboardData.code}`;
+  document.getElementById('dash-evaluator-link').textContent = link;
+
+  const count = dashboardData.evaluatorCount || 0;
+  
+  // 🆕 BARRA DE PROGRESSO ATÉ 30 (com marcador no 3)
+  const pct = Math.min((count / MAX_EVALUATORS) * 100, 100);
+  const fillEl = document.getElementById('dash-status-fill');
+  fillEl.style.width = pct + '%';
+  fillEl.textContent = `${count}/${MAX_EVALUATORS}`;
+  
+  // 🆕 Adiciona marcador visual do mínimo (3) na barra
+  const statusBar = fillEl.parentElement;
+  statusBar.style.position = 'relative';
+  
+  let marker = statusBar.querySelector('.min-marker');
+  let label = statusBar.querySelector('.min-marker-label');
+  const markerColor = count >= MIN_EVALUATORS ? '#10b981' : '#f59e0b';
+  
+  if (!marker) {
+    marker = document.createElement('div');
+    marker.className = 'min-marker';
+    marker.style.cssText = `
+      position: absolute;
+      left: ${(MIN_EVALUATORS / MAX_EVALUATORS) * 100}%;
+      top: -4px;
+      bottom: -4px;
+      width: 3px;
+      border-radius: 2px;
+      z-index: 2;
+      box-shadow: 0 0 0 2px white;
+    `;
+    marker.title = `Mínimo: ${MIN_EVALUATORS} avaliadores`;
+    statusBar.appendChild(marker);
+    
+    label = document.createElement('div');
+    label.className = 'min-marker-label';
+    label.style.cssText = `
+      position: absolute;
+      left: calc(${(MIN_EVALUATORS / MAX_EVALUATORS) * 100}% - 18px);
+      top: -22px;
+      font-size: 10px;
+      font-weight: 900;
+      font-family: Arial, sans-serif;
+      letter-spacing: 0.05em;
+      white-space: nowrap;
+    `;
+    statusBar.appendChild(label);
+  }
+  
+  marker.style.background = markerColor;
+  label.style.color = markerColor;
+  label.textContent = count >= MIN_EVALUATORS ? '✓ MÍN' : 'MÍN 3';
+  
+  document.getElementById('dash-evaluators-count').textContent = `${count} ${count === 1 ? 'avaliador respondeu' : 'avaliadores responderam'}`;
+
+  const statusLabel = document.getElementById('dash-status-label');
+  const message = document.getElementById('dash-message');
+  const pdfBtn = document.getElementById('btn-generate-pdf');
+  const pdfDesc = document.getElementById('pdf-desc');
+
+  if (dashboardData.status === 'closed') {
+    statusLabel.textContent = '🔒 Avaliação encerrada';
+    message.textContent = 'Sua avaliação foi encerrada e não aceita mais respostas.';
+    if (count >= MIN_EVALUATORS) {
+      pdfBtn.disabled = false;
+      pdfDesc.textContent = 'Clique para gerar e enviar por email';
+    }
+  } else if (count >= MIN_EVALUATORS) {
+    if (count >= MAX_EVALUATORS) {
+      statusLabel.textContent = '🏆 Limite máximo atingido!';
+      message.textContent = `Você atingiu o limite de ${MAX_EVALUATORS} avaliadores. Que riqueza de perspectivas!`;
+    } else {
+      statusLabel.textContent = '✅ Pronto para gerar relatório!';
+      message.textContent = `Você tem ${count} avaliador(es). Pode gerar o relatório agora ou aguardar mais (até ${MAX_EVALUATORS}).`;
+    }
+    pdfBtn.disabled = false;
+    pdfDesc.textContent = 'Clique para gerar e enviar por email';
+  } else {
+    statusLabel.textContent = '⏳ Aguardando avaliações';
+    message.textContent = `Faltam ${MIN_EVALUATORS - count} avaliador(es) para atingir o mínimo de ${MIN_EVALUATORS}.`;
+    pdfBtn.disabled = true;
+    pdfDesc.textContent = `Disponível com ${MIN_EVALUATORS}+ avaliadores`;
+  }
+
+  // Renderizar gráficos
+  if (count >= 1 || dashboardData.selfAssessment) {
+    document.getElementById('dash-charts').style.display = 'grid';
+    setTimeout(() => renderDashboardCharts(), 100);
+  }
+}
+
+async function refreshDashboard() {
+  if (!dashboardData) return;
+  const pin = dashboardData.pin || signupPin;
+  await loadDashboard(dashboardData.email, pin);
+  alert('✅ Status atualizado!');
+}
+
+async function closeEvaluation() {
+  if (!confirm('Tem certeza que deseja encerrar a avaliação? Após encerrar, novos avaliadores não poderão mais responder.')) return;
+  try {
+    await postToScript({
+      apiKey: API_KEY,
+      action: 'closeLeader',
+      leaderCode: dashboardData.code,
+      email: dashboardData.email
+    });
+    dashboardData.status = 'closed';
+    renderDashboard();
+    alert('🔒 Avaliação encerrada com sucesso!');
+  } catch (err) {
+    alert('❌ Erro ao encerrar. Tente novamente.');
+  }
+}
+
+function logoutDashboard() {
+  if (!confirm('Deseja sair do painel?')) return;
+  dashboardData = null;
+  showStep('step-welcome');
+}
+
+function forgotPin() {
+  alert('🔒 Para recuperar seu PIN, entre em contato com:\n\nPr. Roger\namavroger@gmail.com\n\nInforme seu e-mail cadastrado e seu código PLN-XXXXX.');
+}
+
+// ═══════════════════════════════════════════════════════
+// 📊 GRÁFICOS DO PAINEL — RADAR + DONUT
+// ═══════════════════════════════════════════════════════
+function renderDashboardCharts() {
+  renderDashRadar();
+  renderDashDonut();
+}
+
+function getCompetencyAverages(source) {
+  return competencies.map(comp => {
+    const indices = questions.map((q, idx) => q.c === comp.id ? idx : -1).filter(i => i !== -1);
+    let allValues = [];
+    if (Array.isArray(source) && source.length === 48) {
+      indices.forEach(idx => { if (source[idx] !== null && source[idx] !== undefined) allValues.push(source[idx]); });
+    } else if (Array.isArray(source)) {
+      source.forEach(item => {
+        if (item.responses) {
+          indices.forEach(idx => { if (item.responses[idx] !== null && item.responses[idx] !== undefined) allValues.push(item.responses[idx]); });
+        }
+      });
+    }
+    if (allValues.length === 0) return 0;
+    const sum = allValues.reduce((a, b) => a + b, 0);
+    return parseFloat((sum / allValues.length).toFixed(2));
+  });
+}
+
+function renderDashRadar() {
+  const ctx = document.getElementById('dash-radar-chart');
+  if (!ctx) return;
+  if (radarChartInstance) radarChartInstance.destroy();
+
+  const selfData = dashboardData.selfAssessment?.responses
+    ? getCompetencyAverages(dashboardData.selfAssessment.responses)
+    : new Array(8).fill(0);
+  const evalData = dashboardData.evaluations && dashboardData.evaluations.length
+    ? getCompetencyAverages(dashboardData.evaluations)
+    : new Array(8).fill(0);
+
+  const datasets = [{
+    label: 'Sua autopercepção',
+    data: selfData,
+    backgroundColor: 'rgba(11,99,206,0.20)',
+    borderColor: '#0b63ce',
+    borderWidth: 2.5,
+    pointBackgroundColor: '#0b63ce',
+    pointRadius: 5
+  }];
+
+  if (dashboardData.evaluations && dashboardData.evaluations.length > 0) {
+    datasets.push({
+      label: 'Avaliadores',
+      data: evalData,
+      backgroundColor: 'rgba(16,185,129,0.20)',
+      borderColor: '#10b981',
+      borderWidth: 2.5,
+      pointBackgroundColor: '#10b981',
+      pointRadius: 5
+    });
+  }
+
+  radarChartInstance = new Chart(ctx, {
+    type: 'radar',
+    data: { labels: competencies.map(c => c.name), datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom', labels: { font: { family: 'Poppins', size: 11, weight: '700' }, color: '#063b7a' } },
+        tooltip: {
+          backgroundColor: 'rgba(6,59,122,0.95)',
+          callbacks: {
+            label: function(ctx) {
+              const niveis = ['', '🌱 Iniciante', '🌿 Em Desenv.', '🌳 Consistente', '🌲 Maduro', '✨ Exemplar'];
+              const val = ctx.raw;
+              return ` ${ctx.dataset.label}: ${val.toFixed(1)} — ${niveis[Math.round(val)] || '—'}`;
+            }
+          }
+        },
+        datalabels: { display: false }
+      },
+      scales: {
+        r: {
+          beginAtZero: true, min: 0, max: 5,
+          ticks: { stepSize: 1, font: { size: 10 }, backdropColor: 'rgba(255,255,255,0.85)' },
+          pointLabels: { font: { size: 10, weight: '700' }, color: '#063b7a' },
+          grid: { color: 'rgba(11,99,206,0.12)' }
+        }
+      }
+    }
+  });
+}
+
+function renderDashDonut() {
+  const ctx = document.getElementById('dash-donut-chart');
+  if (!ctx) return;
+  if (donutChartInstance) donutChartInstance.destroy();
+
+  const allResp = [];
+  if (dashboardData.selfAssessment?.responses) allResp.push({ responses: dashboardData.selfAssessment.responses });
+  if (dashboardData.evaluations) allResp.push(...dashboardData.evaluations);
+
+  const pillars = ['CARÁTER', 'COMPETÊNCIA', 'COMUNHÃO'];
+  const pillarAvgs = pillars.map(p => {
+    const compIds = competencies.filter(c => c.pillar === p).map(c => c.id);
+    const indices = questions.map((q, idx) => compIds.includes(q.c) ? idx : -1).filter(i => i !== -1);
+    let values = [];
+    allResp.forEach(item => {
+      if (item.responses) indices.forEach(idx => { if (item.responses[idx]) values.push(item.responses[idx]); });
+    });
+    if (values.length === 0) return 0;
+    return parseFloat((values.reduce((a, b) => a + b, 0) / values.length).toFixed(2));
+  });
+
+  donutChartInstance = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: ['⬆️ CARÁTER', '🛠️ COMPETÊNCIA', '↔️ COMUNHÃO'],
+      datasets: [{
+        data: pillarAvgs,
+        backgroundColor: ['#cc0000', '#005ce6', '#0891b2'],
+        borderColor: '#fff',
+        borderWidth: 3,
+        hoverOffset: 12
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom', labels: { font: { family: 'Poppins', size: 12, weight: '700' }, color: '#063b7a', padding: 14 } },
+        tooltip: {
+          backgroundColor: 'rgba(6,59,122,0.95)',
+          callbacks: { label: function(ctx) { return ` ${ctx.label}: ${ctx.raw.toFixed(2)} / 5.0`; } }
+        },
+        datalabels: { display: false }
+      }
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// 🎨 GERADOR DE GRÁFICOS PREMIUM PARA PDF (off-screen)
+// ═══════════════════════════════════════════════════════
+async function gerarGraficoPremium(tipo, dados, opcoes = {}) {
+  return new Promise((resolve) => {
+    const wrapper = document.createElement('div');
+    wrapper.style.cssText = 'position:fixed;left:-9999px;top:-9999px;width:800px;height:600px;background:#fff;';
+    const canvas = document.createElement('canvas');
+    canvas.width = 800;
+    canvas.height = 600;
+    wrapper.appendChild(canvas);
+    document.body.appendChild(wrapper);
+
+    const config = {
+      type: tipo,
+      data: dados,
+      options: {
+        responsive: false,
+        maintainAspectRatio: false,
+        animation: { duration: 0 },
+        devicePixelRatio: 2,
+        ...opcoes
+      }
+    };
+
+    const chart = new Chart(canvas, config);
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        const img = canvas.toDataURL('image/png', 1.0);
+        chart.destroy();
+        document.body.removeChild(wrapper);
+        resolve(img);
+      });
+    });
+  });
+}
+
+// 🍩 Gráfico DOUGHNUT Premium dos 3 Pilares
+async function gerarGraficoPilaresPDF(allResp) {
+  const pillars = ['CARÁTER', 'COMPETÊNCIA', 'COMUNHÃO'];
+  const pillarAvgs = pillars.map(p => {
+    const compIds = competencies.filter(c => c.pillar === p).map(c => c.id);
+    const indices = questions.map((q, idx) => compIds.includes(q.c) ? idx : -1).filter(i => i !== -1);
+    let values = [];
+    allResp.forEach(item => {
+      if (item.responses) indices.forEach(idx => { if (item.responses[idx]) values.push(item.responses[idx]); });
+    });
+    return values.length ? parseFloat((values.reduce((a, b) => a + b, 0) / values.length).toFixed(2)) : 0;
+  });
+
+  return await gerarGraficoPremium('doughnut', {
+    labels: ['CARÁTER', 'COMPETÊNCIA', 'COMUNHÃO'],
+    datasets: [{
+      data: pillarAvgs,
+      backgroundColor: ['#cc0000', '#005ce6', '#0891b2'],
+      borderColor: '#fff',
+      borderWidth: 4,
+      hoverOffset: 0
+    }]
+  }, {
+    cutout: '55%',
+    plugins: {
+      legend: {
+        position: 'bottom',
+        labels: { font: { size: 14, weight: 'bold' }, color: '#063b7a', padding: 18, boxWidth: 18 }
+      },
+      title: {
+        display: true,
+        text: ['Distribuição dos Pilares Cruciformes', `Média Geral: ${(pillarAvgs.reduce((a,b)=>a+b,0)/3).toFixed(2)} / 5.00`],
+        font: { size: 16, weight: 'bold' },
+        color: '#063b7a',
+        padding: { top: 10, bottom: 20 }
+      },
+      datalabels: {
+        color: '#fff',
+        font: { size: 18, weight: 'bold' },
+        formatter: (v) => v.toFixed(1)
+      }
+    }
+  });
+}
+
+// 🎯 Gráfico RADAR Premium (Auto vs Avaliadores)
+async function gerarGraficoRadarPDF(selfData, evalData, temAvaliadores) {
+  const datasets = [{
+    label: 'Sua autopercepção',
+    data: selfData,
+    backgroundColor: 'rgba(11,99,206,0.25)',
+    borderColor: '#0b63ce',
+    borderWidth: 3,
+    pointBackgroundColor: '#0b63ce',
+    pointRadius: 6,
+    pointBorderColor: '#fff',
+    pointBorderWidth: 2
+  }];
+
+  if (temAvaliadores) {
+    datasets.push({
+      label: 'Percepção dos Avaliadores',
+      data: evalData,
+      backgroundColor: 'rgba(16,185,129,0.25)',
+      borderColor: '#10b981',
+      borderWidth: 3,
+      pointBackgroundColor: '#10b981',
+      pointRadius: 6,
+      pointBorderColor: '#fff',
+      pointBorderWidth: 2
+    });
+  }
+
+  return await gerarGraficoPremium('radar', {
+    labels: competencies.map(c => c.name.replace(/[^\w\sÀ-ÿ]/g, '').trim()),
+    datasets
+  }, {
+    plugins: {
+      legend: {
+        position: 'bottom',
+        labels: { font: { size: 14, weight: 'bold' }, color: '#063b7a', padding: 16 }
+      },
+      title: {
+        display: true,
+        text: 'Espelho 360 - As 8 Competências',
+        font: { size: 16, weight: 'bold' },
+        color: '#063b7a',
+        padding: { top: 10, bottom: 20 }
+      },
+      datalabels: { display: false }
+    },
+    scales: {
+      r: {
+        beginAtZero: true, min: 0, max: 5,
+        ticks: { stepSize: 1, font: { size: 11, weight: 'bold' }, backdropColor: 'rgba(255,255,255,0.9)' },
+        pointLabels: { font: { size: 11, weight: 'bold' }, color: '#063b7a' },
+        grid: { color: 'rgba(11,99,206,0.18)', lineWidth: 1.5 },
+        angleLines: { color: 'rgba(11,99,206,0.18)' }
+      }
+    }
+  });
+}
+
+// 🥧 Gráfico POLAR Premium — Ranking das 8 Competências
+async function gerarGraficoPolarPDF(compAvgs) {
+  return await gerarGraficoPremium('polarArea', {
+    labels: competencies.map(c => c.name.replace(/[^\w\sÀ-ÿ]/g, '').trim()),
+    datasets: [{
+      data: compAvgs,
+      backgroundColor: competencies.map(c => c.color + 'CC'),
+      borderColor: '#fff',
+      borderWidth: 2
+    }]
+  }, {
+    plugins: {
+      legend: {
+        position: 'right',
+        labels: { font: { size: 11, weight: 'bold' }, color: '#063b7a', padding: 10, boxWidth: 14 }
+      },
+      title: {
+        display: true,
+        text: 'Mapa Comparativo das 8 Competências',
+        font: { size: 16, weight: 'bold' },
+        color: '#063b7a',
+        padding: { top: 10, bottom: 20 }
+      },
+      datalabels: {
+        color: '#fff',
+        font: { size: 13, weight: 'bold' },
+        formatter: (v) => v.toFixed(1)
+      }
+    },
+    scales: {
+      r: {
+        beginAtZero: true, min: 0, max: 5,
+        ticks: { stepSize: 1, font: { size: 10 }, backdropColor: 'rgba(255,255,255,0.85)' },
+        grid: { color: 'rgba(11,99,206,0.15)' }
+      }
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// 🧹 SANITIZAR TEXTO PARA PDF (remove emojis incompatíveis)
+// Mantém acentos PT-BR perfeitamente
+// ═══════════════════════════════════════════════════════
+function sanitizePDF(text) {
+  if (!text) return '';
+  return String(text)
+    .replace(/[\u{1F300}-\u{1F9FF}]/gu, '')
+    .replace(/[\u{2600}-\u{27BF}]/gu, '')
+    .replace(/[\u{1F000}-\u{1F2FF}]/gu, '')
+    .replace(/[\u{2300}-\u{23FF}]/gu, '')
+    .replace(/[\u{FE00}-\u{FE0F}]/gu, '')
+    .replace(/✝️|✝/g, '')
+    .replace(/🏛️|🏛/g, '')
+    .replace(/⬆️|⬆/g, '')
+    .replace(/↔️|↔/g, '')
+    .replace(/🛠️|🛠/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+// ═══════════════════════════════════════════════════════
+// 📧 ENVIAR PDF POR EMAIL VIA GOOGLE APPS SCRIPT
+// ═══════════════════════════════════════════════════════
+async function enviarPDFPorEmail(pdfBase64, filename) {
+  const payload = {
+    apiKey: API_KEY,
+    action: 'sendReportEmail',
+    leaderCode: dashboardData.code,
+    email: dashboardData.email,
+    name: dashboardData.name,
+    pdfBase64: pdfBase64,
+    filename: filename,
+    evaluatorCount: dashboardData.evaluatorCount || 0
+  };
+  
+  try {
+    await postToScript(payload);
+    return true;
+  } catch (err) {
+    console.error('Erro ao enviar email:', err);
+    return false;
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// 📄 GERAÇÃO DO PDF — RELATÓRIO PLENITUDE IEC™ PREMIUM v2.0
+// ═══════════════════════════════════════════════════════
+async function generatePDF() {
+  if (!dashboardData) return;
+  const btn = document.getElementById('btn-generate-pdf');
+  const orig = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="loading-spinner"></span> Gerando PDF...';
+
+  try {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF('p', 'mm', 'a4');
+    const W = 210, H = 297;
+    let y = 0;
+
+    // ═══ CAPA ═══
+    doc.setFillColor(11, 74, 162);
+    doc.rect(0, 0, W, H, 'F');
+    doc.setFillColor(56, 189, 248);
+    doc.rect(0, 0, W, 8, 'F');
+
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(18);
+    doc.text('PLENITUDE IEC', W / 2, 60, { align: 'center' });
+    doc.setFontSize(13);
+    doc.setFont('helvetica', 'italic');
+    doc.text('Onde a Inteligencia Emocional encontra a Palavra', W / 2, 70, { align: 'center' });
+
+    doc.setFontSize(40);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Discipulado 360', W / 2, 115, { align: 'center' });
+    doc.setFontSize(20);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Relatorio Executivo', W / 2, 128, { align: 'center' });
+
+    doc.setDrawColor(56, 189, 248);
+    doc.setLineWidth(0.5);
+    doc.roundedRect(30, 150, 150, 65, 6, 6, 'S');
+    doc.setFontSize(12);
+    doc.setTextColor(56, 189, 248);
+    doc.setFont('helvetica', 'bold');
+    doc.text('LIDERANCA AVALIADA', W / 2, 162, { align: 'center' });
+    doc.setFontSize(22);
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('helvetica', 'bold');
+    doc.text(sanitizePDF(dashboardData.name), W / 2, 178, { align: 'center' });
+    doc.setFontSize(13);
+    doc.setFont('helvetica', 'normal');
+    doc.text(sanitizePDF(`${dashboardData.position} | ${dashboardData.company}`), W / 2, 188, { align: 'center' });
+    doc.setFontSize(12);
+    doc.text(`Codigo: ${dashboardData.code}`, W / 2, 198, { align: 'center' });
+    doc.setFont('helvetica', 'bold');
+    doc.text(`${dashboardData.evaluatorCount || 0} avaliadores`, W / 2, 207, { align: 'center' });
+
+    doc.setFontSize(11);
+    doc.setTextColor(200, 220, 255);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Gerado em ${new Date().toLocaleDateString('pt-BR')}`, W / 2, 270, { align: 'center' });
+    doc.setFont('helvetica', 'italic');
+    doc.setFontSize(10);
+    doc.text('"Como o ferro com ferro se afia, assim o homem afia o seu proximo." - Pv 27:17', W / 2, 278, { align: 'center' });
+
+    // ═══ PÁGINA 2: SCORE EXECUTIVO ═══
+    doc.addPage();
+    addPageHeader(doc, 'Score Executivo');
+    y = 40;
+
+    const allResp = [];
+    if (dashboardData.selfAssessment?.responses) allResp.push({ responses: dashboardData.selfAssessment.responses });
+    if (dashboardData.evaluations) allResp.push(...dashboardData.evaluations);
+
+    const compAvgs = getCompetencyAverages(allResp);
+    const overallAvg = compAvgs.reduce((a, b) => a + b, 0) / compAvgs.length;
+    const score100 = Math.round((overallAvg / 5) * 100);
+
+    let nivel = 'Iniciante', cor = [220, 38, 38];
+    if (overallAvg >= 4.5) { nivel = 'Exemplar'; cor = [16, 185, 129]; }
+    else if (overallAvg >= 3.5) { nivel = 'Maduro'; cor = [11, 99, 206]; }
+    else if (overallAvg >= 2.5) { nivel = 'Consistente'; cor = [217, 119, 6]; }
+    else if (overallAvg >= 1.5) { nivel = 'Em Desenvolvimento'; cor = [234, 88, 12]; }
+
+    doc.setFillColor(cor[0], cor[1], cor[2]);
+    doc.roundedRect(20, y, 170, 55, 6, 6, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(54);
+    doc.text(`${score100}`, 60, y + 38, { align: 'center' });
+    doc.setFontSize(16);
+    doc.text('/100', 60, y + 48, { align: 'center' });
+
+    doc.setFontSize(13);
+    doc.setFont('helvetica', 'bold');
+    doc.text('NIVEL DE MATURIDADE', 105, y + 18);
+    doc.setFontSize(28);
+    doc.text(nivel, 105, y + 32);
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Media geral: ${overallAvg.toFixed(2)} / 5.00`, 105, y + 45);
+
+    y += 65;
+
+    // Score por pilar
+    doc.setTextColor(6, 59, 122);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(16);
+    doc.text('Score por Pilar Cruciforme', 20, y);
+    y += 4;
+    doc.setDrawColor(11, 99, 206);
+    doc.setLineWidth(0.8);
+    doc.line(20, y, 80, y);
+    y += 8;
+
+    const pillars = ['CARATER', 'COMPETENCIA', 'COMUNHAO'];
+    const pillarsOrig = ['CARÁTER', 'COMPETÊNCIA', 'COMUNHÃO'];
+    const pillarColors = [[204, 0, 0], [0, 92, 230], [8, 145, 178]];
+    pillars.forEach((p, i) => {
+      const compIds = competencies.filter(c => c.pillar === pillarsOrig[i]).map(c => c.id);
+      const indices = questions.map((q, idx) => compIds.includes(q.c) ? idx : -1).filter(x => x !== -1);
+      let values = [];
+      allResp.forEach(item => { if (item.responses) indices.forEach(idx => { if (item.responses[idx]) values.push(item.responses[idx]); }); });
+      const avg = values.length ? values.reduce((a, b) => a + b, 0) / values.length : 0;
+
+      doc.setFillColor(245, 249, 255);
+      doc.roundedRect(20, y, 170, 18, 3, 3, 'F');
+      doc.setFillColor(pillarColors[i][0], pillarColors[i][1], pillarColors[i][2]);
+      doc.rect(20, y, 5, 18, 'F');
+      
+      doc.setTextColor(pillarColors[i][0], pillarColors[i][1], pillarColors[i][2]);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(13);
+      doc.text(p, 30, y + 11);
+      
+      doc.setFillColor(230, 238, 252);
+      doc.roundedRect(85, y + 6, 80, 6, 2, 2, 'F');
+      doc.setFillColor(pillarColors[i][0], pillarColors[i][1], pillarColors[i][2]);
+      doc.roundedRect(85, y + 6, (avg / 5) * 80, 6, 2, 2, 'F');
+      
+      doc.setTextColor(6, 59, 122);
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
+      doc.text(`${avg.toFixed(2)}/5`, 173, y + 11);
+      y += 22;
+    });
+
+    // ═══ PÁGINA 3: DOUGHNUT ═══
+    doc.addPage();
+    addPageHeader(doc, 'Analise Visual 360');
+    y = 35;
+
+    btn.innerHTML = '<span class="loading-spinner"></span> Renderizando graficos...';
+
+    const selfDataChart = dashboardData.selfAssessment?.responses
+      ? getCompetencyAverages(dashboardData.selfAssessment.responses)
+      : new Array(8).fill(0);
+    const evalDataChart = dashboardData.evaluations && dashboardData.evaluations.length
+      ? getCompetencyAverages(dashboardData.evaluations)
+      : new Array(8).fill(0);
+    const temAvaliadores = dashboardData.evaluations && dashboardData.evaluations.length > 0;
+
+    const imgPilares = await gerarGraficoPilaresPDF(allResp);
+    doc.addImage(imgPilares, 'PNG', 25, y, 160, 120);
+    y += 125;
+
+    doc.setFillColor(245, 249, 255);
+    doc.roundedRect(20, y, 170, 26, 3, 3, 'F');
+    doc.setFillColor(11, 99, 206);
+    doc.rect(20, y, 4, 26, 'F');
+    doc.setTextColor(6, 59, 122);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(12);
+    doc.text('Como interpretar:', 28, y + 8);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.text('Este grafico mostra a distribuicao da maturidade entre os 3 pilares cruciformes.', 28, y + 15);
+    doc.text('Pilares equilibrados indicam lideranca integral; desequilibrios apontam areas de atencao.', 28, y + 21);
+
+    // ═══ PÁGINA 4: RADAR ═══
+    doc.addPage();
+    addPageHeader(doc, 'Espelho 360 Comparativo');
+    y = 35;
+
+    const imgRadar = await gerarGraficoRadarPDF(selfDataChart, evalDataChart, temAvaliadores);
+    doc.addImage(imgRadar, 'PNG', 20, y, 170, 130);
+    y += 135;
+
+    if (temAvaliadores) {
+      doc.setFillColor(245, 249, 255);
+      doc.roundedRect(20, y, 170, 32, 3, 3, 'F');
+      doc.setFillColor(11, 99, 206);
+      doc.rect(20, y, 4, 32, 'F');
+      doc.setTextColor(6, 59, 122);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(12);
+      doc.text('Como ler este grafico:', 28, y + 8);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(10);
+      doc.text('AZUL = sua autopercepcao | VERDE = como os avaliadores percebem voce.', 28, y + 15);
+      doc.text('Quando as linhas se afastam, ha um ponto cego ou forca nao percebida.', 28, y + 21);
+      doc.text('Linhas proximas indicam autoconsciencia madura - voce se conhece bem.', 28, y + 27);
+    }
+
+    // ═══ PÁGINA 5: POLAR ═══
+    doc.addPage();
+    addPageHeader(doc, 'Mapa das Competencias');
+    y = 35;
+
+    const imgPolar = await gerarGraficoPolarPDF(compAvgs);
+    doc.addImage(imgPolar, 'PNG', 20, y, 170, 130);
+    y += 135;
+
+    doc.setFillColor(245, 249, 255);
+    doc.roundedRect(20, y, 170, 26, 3, 3, 'F');
+    doc.setFillColor(11, 99, 206);
+    doc.rect(20, y, 4, 26, 'F');
+    doc.setTextColor(6, 59, 122);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(12);
+    doc.text('Mapa Comparativo:', 28, y + 8);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.text('Setores maiores = competencias mais maduras. Setores menores = areas para crescer.', 28, y + 15);
+    doc.text('Use este mapa para identificar rapidamente onde investir nos proximos 90 dias.', 28, y + 21);
+
+    btn.innerHTML = '<span class="loading-spinner"></span> Finalizando...';
+
+    // ═══ PÁGINA 6: 8 COMPETÊNCIAS ═══
+    doc.addPage();
+    addPageHeader(doc, 'As 8 Competencias');
+    y = 40;
+
+    competencies.forEach((c, i) => {
+      const avg = compAvgs[i];
+      let lvl = 'Iniciante';
+      if (avg >= 4.5) lvl = 'Exemplar';
+      else if (avg >= 3.5) lvl = 'Maduro';
+      else if (avg >= 2.5) lvl = 'Consistente';
+      else if (avg >= 1.5) lvl = 'Em Desenv.';
+
+      doc.setFillColor(245, 249, 255);
+      doc.roundedRect(20, y, 170, 22, 3, 3, 'F');
+      const rgb = hexToRgb(c.color);
+      doc.setFillColor(rgb.r, rgb.g, rgb.b);
+      doc.rect(20, y, 5, 22, 'F');
+      
+      doc.setTextColor(6, 59, 122);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(13);
+      doc.text(sanitizePDF(c.name), 30, y + 9);
+      
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(10);
+      doc.setTextColor(100, 116, 139);
+      doc.text(`Pilar: ${sanitizePDF(c.pillar)}`, 30, y + 16);
+      
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(16);
+      doc.setTextColor(6, 59, 122);
+      doc.text(`${avg.toFixed(2)}`, 165, y + 10);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(10);
+      doc.setTextColor(100, 116, 139);
+      doc.text(lvl, 165, y + 17);
+      y += 26;
+      if (y > 260) { doc.addPage(); addPageHeader(doc, 'As 8 Competencias (cont.)'); y = 40; }
+    });
+
+    // ═══ PÁGINA: FORÇAS E PONTOS CEGOS ═══
+    doc.addPage();
+    addPageHeader(doc, 'Forcas e Pontos Cegos');
+    y = 40;
+
+    const ranked = competencies.map((c, i) => ({ ...c, avg: compAvgs[i] })).sort((a, b) => b.avg - a.avg);
+    const top3 = ranked.slice(0, 3);
+    const bottom3 = ranked.slice(-3).reverse();
+
+    doc.setFillColor(16, 185, 129);
+    doc.roundedRect(20, y, 170, 12, 3, 3, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(13);
+    doc.text('TOP 3 FORCAS - Para a Gloria de Deus', 25, y + 8);
+    y += 16;
+
+    top3.forEach((c, i) => {
+      doc.setFillColor(236, 253, 245);
+      doc.roundedRect(20, y, 170, 18, 3, 3, 'F');
+      doc.setFillColor(16, 185, 129);
+      doc.circle(28, y + 9, 5, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(12);
+      doc.text(`${i + 1}`, 28, y + 11, { align: 'center' });
+      
+      doc.setTextColor(6, 95, 70);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(13);
+      doc.text(sanitizePDF(c.name), 38, y + 8);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(10);
+      doc.text(`Pilar: ${sanitizePDF(c.pillar)} | Score: ${c.avg.toFixed(2)} / 5.00`, 38, y + 14);
+      y += 22;
+    });
+
+    y += 6;
+    doc.setFillColor(220, 38, 38);
+    doc.roundedRect(20, y, 170, 12, 3, 3, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(13);
+    doc.text('TOP 3 PONTOS A DESENVOLVER - Areas de Crescimento', 25, y + 8);
+    y += 16;
+
+    bottom3.forEach((c, i) => {
+      doc.setFillColor(254, 242, 242);
+      doc.roundedRect(20, y, 170, 18, 3, 3, 'F');
+      doc.setFillColor(220, 38, 38);
+      doc.circle(28, y + 9, 5, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(12);
+      doc.text(`${i + 1}`, 28, y + 11, { align: 'center' });
+      
+      doc.setTextColor(153, 27, 27);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(13);
+      doc.text(sanitizePDF(c.name), 38, y + 8);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(10);
+      doc.text(`Pilar: ${sanitizePDF(c.pillar)} | Score: ${c.avg.toFixed(2)} / 5.00`, 38, y + 14);
+      y += 22;
+    });
+
+    // ═══ PÁGINA: PDI ═══
+    doc.addPage();
+    addPageHeader(doc, 'PDI - Plano de Desenvolvimento');
+    y = 40;
+
+    doc.setFillColor(124, 58, 237);
+    doc.roundedRect(20, y, 170, 16, 3, 3, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(14);
+    doc.text('Plano de Acao para os Proximos 90 Dias', 25, y + 10);
+    y += 22;
+
+    bottom3.forEach((c, i) => {
+      const acoes = getPDIActions(c.id);
+      
+      doc.setFillColor(243, 232, 255);
+      doc.roundedRect(20, y, 170, 8, 2, 2, 'F');
+      doc.setTextColor(124, 58, 237);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(13);
+      doc.text(`ACAO ${i + 1}: ${sanitizePDF(c.name)}`, 24, y + 6);
+      y += 12;
+      
+      doc.setTextColor(51, 65, 85);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(11);
+      acoes.forEach(a => {
+        const cleanText = sanitizePDF(a);
+        const lines = doc.splitTextToSize(`> ${cleanText}`, 165);
+        doc.text(lines, 24, y);
+        y += lines.length * 5 + 3;
+      });
+      y += 6;
+      if (y > 250) { doc.addPage(); addPageHeader(doc, 'PDI (cont.)'); y = 40; }
+    });
+
+    // ═══ PÁGINA: COMENTÁRIOS ═══
+    doc.addPage();
+    addPageHeader(doc, 'Reflexoes Consolidadas');
+    y = 40;
+
+    if (dashboardData.selfAssessment) {
+      doc.setFillColor(245, 249, 255);
+      doc.roundedRect(20, y, 170, 8, 2, 2, 'F');
+      doc.setTextColor(6, 59, 122);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(13);
+      doc.text('Sua autopercepcao - Forcas', 24, y + 6);
+      y += 12;
+      
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(11);
+      doc.setTextColor(51, 65, 85);
+      const s = doc.splitTextToSize(sanitizePDF(dashboardData.selfAssessment.strengths) || '-', 170);
+      doc.text(s, 20, y); y += s.length * 5 + 8;
+
+      doc.setFillColor(245, 249, 255);
+      doc.roundedRect(20, y, 170, 8, 2, 2, 'F');
+      doc.setTextColor(6, 59, 122);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(13);
+      doc.text('Sua autopercepcao - A desenvolver', 24, y + 6);
+      y += 12;
+      
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(11);
+      doc.setTextColor(51, 65, 85);
+      const im = doc.splitTextToSize(sanitizePDF(dashboardData.selfAssessment.improvements) || '-', 170);
+      doc.text(im, 20, y); y += im.length * 5 + 8;
+
+      doc.setFillColor(245, 249, 255);
+      doc.roundedRect(20, y, 170, 8, 2, 2, 'F');
+      doc.setTextColor(6, 59, 122);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(13);
+      doc.text('Seu legado para o Reino', 24, y + 6);
+      y += 12;
+      
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(11);
+      doc.setTextColor(51, 65, 85);
+      const ip = doc.splitTextToSize(sanitizePDF(dashboardData.selfAssessment.impact) || '-', 170);
+      doc.text(ip, 20, y); y += ip.length * 5 + 8;
+    }
+
+    if (y > 240) { doc.addPage(); addPageHeader(doc, 'Reflexoes (cont.)'); y = 40; }
+
+    if (dashboardData.evaluations && dashboardData.evaluations.length) {
+      doc.setFillColor(11, 99, 206);
+      doc.roundedRect(20, y, 170, 12, 3, 3, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(13);
+      doc.text('Comentarios dos Avaliadores (Anonimos)', 25, y + 8);
+      y += 16;
+
+      dashboardData.evaluations.forEach((ev, i) => {
+        if (y > 240) { doc.addPage(); addPageHeader(doc, 'Comentarios (cont.)'); y = 40; }
+        
+        doc.setFillColor(241, 245, 249);
+        doc.roundedRect(20, y, 170, 8, 2, 2, 'F');
+        doc.setTextColor(6, 59, 122);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(12);
+        doc.text(`Avaliador #${i + 1} (${sanitizePDF(ev.relation) || 'anonimo'})`, 24, y + 6);
+        y += 12;
+        
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(10);
+        doc.setTextColor(51, 65, 85);
+        if (ev.strengths) {
+          doc.setFont('helvetica', 'bold');
+          doc.text('Forcas:', 22, y);
+          doc.setFont('helvetica', 'normal');
+          const a = doc.splitTextToSize(sanitizePDF(ev.strengths), 155);
+          doc.text(a, 38, y); y += Math.max(a.length * 4.5, 5) + 2;
+        }
+        if (ev.improvements) {
+          doc.setFont('helvetica', 'bold');
+          doc.text('A desenvolver:', 22, y);
+          doc.setFont('helvetica', 'normal');
+          const b = doc.splitTextToSize(sanitizePDF(ev.improvements), 145);
+          doc.text(b, 48, y); y += Math.max(b.length * 4.5, 5) + 2;
+        }
+        if (ev.impact) {
+          doc.setFont('helvetica', 'bold');
+          doc.text('Impacto:', 22, y);
+          doc.setFont('helvetica', 'normal');
+          const c2 = doc.splitTextToSize(sanitizePDF(ev.impact), 152);
+          doc.text(c2, 41, y); y += Math.max(c2.length * 4.5, 5) + 5;
+        }
+      });
+    }
+
+    // ═══ PÁGINA FINAL ═══
+    doc.addPage();
+    doc.setFillColor(11, 74, 162);
+    doc.rect(0, 0, W, H, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(26);
+    doc.text('Que Deus o(a) recompense', W / 2, 100, { align: 'center' });
+    doc.text('por essa coragem e humildade!', W / 2, 115, { align: 'center' });
+
+    doc.setFontSize(13);
+    doc.setFont('helvetica', 'italic');
+    const verse = '"Antes, seguindo a verdade em amor, crescamos em tudo naquele que e a cabeca, Cristo."';
+    const lines = doc.splitTextToSize(verse, 160);
+    doc.text(lines, W / 2, 150, { align: 'center' });
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(12);
+    doc.text('- Efesios 4:15', W / 2, 170, { align: 'center' });
+
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Pr. Roger - amavroger@gmail.com', W / 2, 250, { align: 'center' });
+    doc.setFontSize(10);
+    doc.setTextColor(200, 220, 255);
+    doc.text('Plenitude IEC | Discipulado 360', W / 2, 260, { align: 'center' });
+    doc.setFont('helvetica', 'italic');
+    doc.text('Onde a Inteligencia Emocional encontra a Palavra', W / 2, 268, { align: 'center' });
+
+    // 💾 Gera o PDF
+    const filename = `Plenitude_IEC_${sanitizePDF(dashboardData.name).replace(/\s/g, '_')}_${Date.now()}.pdf`;
+    
+    // 1️⃣ Baixar localmente
+    doc.save(filename);
+    
+    // 2️⃣ 🆕 Enviar por email automaticamente
+    btn.innerHTML = '<span class="loading-spinner"></span> Enviando por email...';
+    const pdfBase64 = doc.output('datauristring').split(',')[1];
+    
+    const emailEnviado = await enviarPDFPorEmail(pdfBase64, filename);
+    
+    btn.innerHTML = orig;
+    btn.disabled = false;
+    
+    if (emailEnviado) {
+      alert(`✅ Relatório gerado com sucesso!\n\n📥 Baixado no seu dispositivo\n📧 Enviado para ${dashboardData.email}\n\nVerifique sua caixa de entrada (e spam).`);
+    } else {
+      alert(`✅ Relatório baixado!\n\n⚠️ O envio por email falhou, mas o PDF foi salvo no seu dispositivo.`);
+    }
+
+  } catch (err) {
+    console.error('Erro PDF:', err);
+    alert('❌ Erro ao gerar PDF: ' + err.message);
+    btn.innerHTML = orig;
+    btn.disabled = false;
+  }
+}
+
+function addPageHeader(doc, title) {
+  doc.setFillColor(11, 74, 162);
+  doc.rect(0, 0, 210, 25, 'F');
+  doc.setFillColor(56, 189, 248);
+  doc.rect(0, 25, 210, 2, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(11);
+  doc.text('PLENITUDE IEC - Discipulado 360', 20, 12);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(14);
+  doc.text(title, 20, 21);
+}
+
+function hexToRgb(hex) {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return { r, g, b };
+}
+
+function getPDIActions(compId) {
+  const map = {
+    'C1': [
+      'Estabeleça uma rotina devocional fixa de 30 min/dia (oração + Palavra) - Salmo 5:3',
+      'Memorize 1 versículo por semana e medite ao longo do dia - Salmo 119:11',
+      'Faça um retiro espiritual de 1 dia a cada 60 dias para recalibrar com Deus'
+    ],
+    'C2': [
+      'Pratique a "pausa sagrada": antes de reagir, ore 30 segundos - Tiago 1:19',
+      'Tenha 1 conversa de feedback honesto por mês com alguém de confiança',
+      'Estude o livro "Inteligência Emocional Cristã" e aplique 1 prática por semana'
+    ],
+    'C3': [
+      'Dedique 5h semanais ao estudo bíblico antes de pregar - 2 Tm 2:15',
+      'Grave-se pregando e analise: clareza, fidelidade ao texto, aplicação prática',
+      'Frequente um curso de homilética ou hermenêutica nos próximos 6 meses'
+    ],
+    'C4': [
+      'Visite 1 família/membro por semana intencionalmente - Pv 27:23',
+      'Pratique a escuta ativa: pergunte 3x antes de aconselhar - Tg 1:19',
+      'Crie uma agenda pastoral com nome, aniversário e contexto de cada pessoa'
+    ],
+    'C5': [
+      'Delegue 1 responsabilidade significativa por mês a alguém da equipe - Êx 18:21',
+      'Faça reuniões 1:1 mensais com cada liderado direto',
+      'Leia "Liderança Servidora" (J. Hunter) e aplique 1 princípio por semana'
+    ],
+    'C6': [
+      'Discipule pessoalmente 2-3 pessoas, com encontros quinzenais - Mt 28:19',
+      'Forme um discípulo que também discipule outros (multiplicação) - 2 Tm 2:2',
+      'Use um material estruturado de discipulado com etapas claras'
+    ],
+    'C7': [
+      'Tenha 1 almoço/encontro mensal com colegas de ministério - At 2:42',
+      'Pratique reconhecer publicamente a contribuição dos outros - Fp 2:3',
+      'Resolva conflitos diretamente em 48h - Mt 18:15'
+    ],
+    'C8': [
+      'Compartilhe o evangelho com 1 pessoa não convertida por mês - 1 Pe 3:15',
+      'Lidere ou apoie 1 ação social local nos próximos 90 dias - Tg 1:27',
+      'Apoie 1 missionário/projeto missionário em oração e ofertas - Mt 28:19'
+    ]
+  };
+  return map[compId] || ['Buscar mentoria específica nesta área', 'Estudar literatura cristã sobre o tema', 'Praticar 1 ação concreta por semana'];
+}
+
+// ═══════════════════════════════════════════════════════
+// COMUNICAÇÃO COM O BACKEND
+// ═══════════════════════════════════════════════════════
+async function postToScript(payload) {
+  const body = JSON.stringify(payload);
+  try {
+    if (navigator.sendBeacon) {
+      const ok = navigator.sendBeacon(WEB_APP_URL, new Blob([body], { type: 'text/plain;charset=utf-8' }));
+      if (ok) return { ok: true };
+    }
+  } catch (e) { console.warn('sendBeacon falhou:', e); }
+  await fetch(WEB_APP_URL, {
+    method: 'POST', mode: 'no-cors',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body
+  });
+  return { ok: true };
+}
+</script>
+</body>
+</html>

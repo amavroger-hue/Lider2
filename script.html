@@ -1,0 +1,752 @@
+/**
+ * ════════════════════════════════════════════════════════════════
+ * 🏛️ PLENITUDE IEC™ - DISCIPULADO 360°
+ * ════════════════════════════════════════════════════════════════
+ * Backend Google Apps Script v3.0
+ * 
+ * Funcionalidades:
+ * ✅ Cadastro de líderes com PIN seguro
+ * ✅ Login validado com PIN
+ * ✅ Submissão de avaliações anônimas
+ * ✅ Encerramento de avaliações
+ * ✅ Painel do líder com status em tempo real
+ * ✅ Envio automático de PDF por email (NOVO!)
+ * ✅ Logs de todas as ações
+ * 
+ * "Como o ferro com ferro se afia, assim o homem afia o seu próximo."
+ * — Provérbios 27:17
+ * ════════════════════════════════════════════════════════════════
+ */
+
+// ════════════════════════════════════════════════════════════════
+// ⚙️ CONFIGURAÇÕES GLOBAIS
+// ════════════════════════════════════════════════════════════════
+const API_KEY = "2026Plenitude360$";
+const ADMIN_EMAIL = "amavroger@gmail.com";
+const SPREADSHEET_ID = ""; // Deixe vazio para usar a planilha ativa, ou cole o ID
+
+const SHEETS = {
+  LEADERS: 'Lideres',
+  EVALUATIONS: 'Avaliacoes',
+  LOGS: 'Logs'
+};
+
+const MIN_EVALUATORS = 3;
+const MAX_EVALUATORS = 30;
+
+// ════════════════════════════════════════════════════════════════
+// 🌐 ENDPOINTS HTTP (doGet e doPost)
+// ════════════════════════════════════════════════════════════════
+
+/**
+ * Endpoint GET — usado para login e consulta de dados
+ */
+function doGet(e) {
+  try {
+    const params = e.parameter || {};
+    const action = params.action;
+    
+    if (params.apiKey !== API_KEY) {
+      return jsonResponse({ ok: false, error: 'API Key inválida' });
+    }
+    
+    let result;
+    switch (action) {
+      case 'loginLeader':
+        result = loginLeader(params);
+        break;
+      case 'getLeader':
+        result = getLeader(params);
+        break;
+      case 'ping':
+        result = { ok: true, message: 'Plenitude IEC™ Backend Online', version: '3.0' };
+        break;
+      default:
+        result = { ok: false, error: 'Ação GET não reconhecida: ' + action };
+    }
+    
+    return jsonResponse(result);
+  } catch (err) {
+    Logger.log('Erro doGet: ' + err.message);
+    return jsonResponse({ ok: false, error: err.message });
+  }
+}
+
+/**
+ * Endpoint POST — usado para criar líder, submeter avaliação, enviar email, etc.
+ */
+function doPost(e) {
+  try {
+    let payload;
+    try {
+      payload = JSON.parse(e.postData.contents);
+    } catch (parseErr) {
+      return jsonResponse({ ok: false, error: 'JSON inválido' });
+    }
+    
+    if (payload.apiKey !== API_KEY) {
+      return jsonResponse({ ok: false, error: 'API Key inválida' });
+    }
+    
+    const action = payload.action;
+    let result;
+    
+    switch (action) {
+      case 'createLeader':
+        result = createLeader(payload);
+        break;
+      case 'submitEvaluation':
+        result = submitEvaluation(payload);
+        break;
+      case 'closeLeader':
+        result = closeLeader(payload);
+        break;
+      case 'sendReportEmail':
+        result = sendReportEmail(payload);
+        break;
+      default:
+        result = { ok: false, error: 'Ação POST não reconhecida: ' + action };
+    }
+    
+    return jsonResponse(result);
+  } catch (err) {
+    Logger.log('Erro doPost: ' + err.message);
+    return jsonResponse({ ok: false, error: err.message });
+  }
+}
+
+/**
+ * Helper para responder em JSON
+ */
+function jsonResponse(obj) {
+  return ContentService
+    .createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+// ════════════════════════════════════════════════════════════════
+// 📊 ACESSO À PLANILHA
+// ════════════════════════════════════════════════════════════════
+
+function getSpreadsheet() {
+  if (SPREADSHEET_ID && SPREADSHEET_ID.length > 0) {
+    return SpreadsheetApp.openById(SPREADSHEET_ID);
+  }
+  return SpreadsheetApp.getActiveSpreadsheet();
+}
+
+function getOrCreateSheet(name, headers) {
+  const ss = getSpreadsheet();
+  let sheet = ss.getSheetByName(name);
+  if (!sheet) {
+    sheet = ss.insertSheet(name);
+    if (headers && headers.length > 0) {
+      sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+      sheet.getRange(1, 1, 1, headers.length)
+        .setFontWeight('bold')
+        .setBackground('#0b4aa2')
+        .setFontColor('#ffffff');
+      sheet.setFrozenRows(1);
+    }
+  }
+  return sheet;
+}
+
+function getLeadersSheet() {
+  return getOrCreateSheet(SHEETS.LEADERS, [
+    'Codigo', 'Nome', 'Email', 'WhatsApp', 'Igreja', 'Funcao', 'Nivel',
+    'TamanhoEquipe', 'Experiencia', 'PIN', 'Status', 'DataCadastro',
+    'AutoavaliacaoJSON', 'ForcasTexto', 'DesenvolverTexto', 'LegadoTexto'
+  ]);
+}
+
+function getEvaluationsSheet() {
+  return getOrCreateSheet(SHEETS.EVALUATIONS, [
+    'CodigoLider', 'NomeAvaliador', 'EmailAvaliador', 'Relacao',
+    'RespostasJSON', 'Forcas', 'ADesenvolver', 'Impacto', 'DataResposta'
+  ]);
+}
+
+function getLogsSheet() {
+  return getOrCreateSheet(SHEETS.LOGS, [
+    'Timestamp', 'Acao', 'Detalhes', 'Status'
+  ]);
+}
+
+function logAction(action, details, status) {
+  try {
+    const sheet = getLogsSheet();
+    sheet.appendRow([
+      new Date(),
+      action,
+      JSON.stringify(details).substring(0, 500),
+      status || 'OK'
+    ]);
+  } catch (err) {
+    Logger.log('Erro ao registrar log: ' + err.message);
+  }
+}
+
+// ════════════════════════════════════════════════════════════════
+// 👤 CRIAR LÍDER (CADASTRO + AUTOAVALIAÇÃO)
+// ════════════════════════════════════════════════════════════════
+
+function createLeader(payload) {
+  try {
+    const leader = payload.leader;
+    if (!leader || !leader.email || !leader.code || !leader.pin) {
+      return { ok: false, error: 'Dados do líder incompletos' };
+    }
+    
+    const sheet = getLeadersSheet();
+    const data = sheet.getDataRange().getValues();
+    
+    // Verifica se já existe (mesmo email)
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][2] && data[i][2].toString().toLowerCase() === leader.email.toLowerCase()) {
+        return { ok: false, error: 'E-mail já cadastrado. Faça login no painel.' };
+      }
+    }
+    
+    const self = leader.selfAssessment || {};
+    
+    sheet.appendRow([
+      leader.code,
+      leader.name || '',
+      leader.email.toLowerCase(),
+      leader.whatsapp || '',
+      leader.company || '',
+      leader.position || '',
+      leader.level || '',
+      leader.teamSize || '',
+      leader.experience || '',
+      leader.pin,
+      'active',
+      leader.timestamp || new Date().toISOString(),
+      JSON.stringify(self.responses || []),
+      self.strengths || '',
+      self.improvements || '',
+      self.impact || ''
+    ]);
+    
+    // Envia email de boas-vindas
+    try {
+      sendWelcomeEmail(leader);
+    } catch (emailErr) {
+      Logger.log('Erro ao enviar email de boas-vindas: ' + emailErr.message);
+    }
+    
+    logAction('createLeader', { code: leader.code, email: leader.email }, 'OK');
+    return { ok: true, code: leader.code };
+    
+  } catch (err) {
+    Logger.log('Erro createLeader: ' + err.message);
+    logAction('createLeader', { error: err.message }, 'ERRO');
+    return { ok: false, error: err.message };
+  }
+}
+
+// ════════════════════════════════════════════════════════════════
+// 🔑 LOGIN DO LÍDER (EMAIL + PIN)
+// ════════════════════════════════════════════════════════════════
+
+function loginLeader(params) {
+  try {
+    const email = (params.email || '').toLowerCase().trim();
+    const pin = (params.pin || '').trim();
+    
+    if (!email || !pin) {
+      return { ok: false, error: 'E-mail e PIN são obrigatórios' };
+    }
+    
+    const sheet = getLeadersSheet();
+    const data = sheet.getDataRange().getValues();
+    
+    for (let i = 1; i < data.length; i++) {
+      const row = data[i];
+      const rowEmail = (row[2] || '').toString().toLowerCase();
+      const rowPin = (row[9] || '').toString();
+      
+      if (rowEmail === email && rowPin === pin) {
+        // Encontrou! Monta o objeto do líder
+        const code = row[0];
+        const evaluations = getEvaluationsByLeader(code);
+        
+        const leader = {
+          code: code,
+          name: row[1],
+          email: row[2],
+          whatsapp: row[3],
+          company: row[4],
+          position: row[5],
+          level: row[6],
+          teamSize: row[7],
+          experience: row[8],
+          pin: row[9],
+          status: row[10],
+          createdAt: row[11],
+          selfAssessment: {
+            responses: parseJSON(row[12], []),
+            strengths: row[13] || '',
+            improvements: row[14] || '',
+            impact: row[15] || ''
+          },
+          evaluations: evaluations,
+          evaluatorCount: evaluations.length
+        };
+        
+        logAction('loginLeader', { email: email, code: code }, 'OK');
+        return { ok: true, leader: leader };
+      }
+    }
+    
+    logAction('loginLeader', { email: email }, 'CREDENCIAIS_INVALIDAS');
+    return { ok: false, error: 'E-mail ou PIN inválidos' };
+    
+  } catch (err) {
+    Logger.log('Erro loginLeader: ' + err.message);
+    return { ok: false, error: err.message };
+  }
+}
+
+function parseJSON(str, fallback) {
+  try {
+    if (!str) return fallback;
+    if (typeof str === 'object') return str;
+    return JSON.parse(str);
+  } catch (e) {
+    return fallback;
+  }
+}
+
+// ════════════════════════════════════════════════════════════════
+// 📋 GET LEADER (Carrega dados pelo código)
+// ════════════════════════════════════════════════════════════════
+
+function getLeader(params) {
+  try {
+    const code = (params.code || '').trim();
+    if (!code) return { ok: false, error: 'Código não informado' };
+    
+    const sheet = getLeadersSheet();
+    const data = sheet.getDataRange().getValues();
+    
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][0] === code) {
+        const row = data[i];
+        const evaluations = getEvaluationsByLeader(code);
+        
+        return {
+          ok: true,
+          leader: {
+            code: row[0],
+            name: row[1],
+            email: row[2],
+            company: row[4],
+            position: row[5],
+            status: row[10],
+            evaluatorCount: evaluations.length
+          }
+        };
+      }
+    }
+    
+    return { ok: false, error: 'Líder não encontrado' };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+}
+
+// ════════════════════════════════════════════════════════════════
+// 📝 SUBMETER AVALIAÇÃO (do avaliador anônimo)
+// ════════════════════════════════════════════════════════════════
+
+function submitEvaluation(payload) {
+  try {
+    const ev = payload.evaluation;
+    if (!ev || !ev.leaderCode) {
+      return { ok: false, error: 'Dados da avaliação incompletos' };
+    }
+    
+    // Verifica se o líder existe e está ativo
+    const leadersSheet = getLeadersSheet();
+    const leadersData = leadersSheet.getDataRange().getValues();
+    let leaderRow = null;
+    let leaderEmail = '';
+    let leaderName = '';
+    
+    for (let i = 1; i < leadersData.length; i++) {
+      if (leadersData[i][0] === ev.leaderCode) {
+        leaderRow = leadersData[i];
+        leaderName = leaderRow[1];
+        leaderEmail = leaderRow[2];
+        if (leaderRow[10] === 'closed') {
+          return { ok: false, error: 'Esta avaliação foi encerrada e não aceita mais respostas.' };
+        }
+        break;
+      }
+    }
+    
+    if (!leaderRow) {
+      return { ok: false, error: 'Código de líder não encontrado' };
+    }
+    
+    // Verifica limite máximo
+    const currentCount = getEvaluationsByLeader(ev.leaderCode).length;
+    if (currentCount >= MAX_EVALUATORS) {
+      return { ok: false, error: `Limite de ${MAX_EVALUATORS} avaliadores atingido.` };
+    }
+    
+    const sheet = getEvaluationsSheet();
+    sheet.appendRow([
+      ev.leaderCode,
+      ev.evaluatorName || 'Anônimo',
+      ev.evaluatorEmail || '',
+      ev.relation || 'peer',
+      JSON.stringify(ev.responses || []),
+      ev.strengths || '',
+      ev.improvements || '',
+      ev.impact || '',
+      new Date().toISOString()
+    ]);
+    
+    // Notifica o líder
+    try {
+      const newCount = currentCount + 1;
+      notifyLeaderNewEvaluation(leaderEmail, leaderName, newCount);
+    } catch (notifyErr) {
+      Logger.log('Erro ao notificar líder: ' + notifyErr.message);
+    }
+    
+    logAction('submitEvaluation', { code: ev.leaderCode, relation: ev.relation }, 'OK');
+    return { ok: true, count: currentCount + 1 };
+    
+  } catch (err) {
+    Logger.log('Erro submitEvaluation: ' + err.message);
+    return { ok: false, error: err.message };
+  }
+}
+
+function getEvaluationsByLeader(code) {
+  const sheet = getEvaluationsSheet();
+  const data = sheet.getDataRange().getValues();
+  const evaluations = [];
+  
+  for (let i = 1; i < data.length; i++) {
+    if (data[i][0] === code) {
+      evaluations.push({
+        leaderCode: data[i][0],
+        evaluatorName: data[i][1],
+        evaluatorEmail: data[i][2],
+        relation: data[i][3],
+        responses: parseJSON(data[i][4], []),
+        strengths: data[i][5] || '',
+        improvements: data[i][6] || '',
+        impact: data[i][7] || '',
+        date: data[i][8]
+      });
+    }
+  }
+  
+  return evaluations;
+}
+
+// ════════════════════════════════════════════════════════════════
+// 🔒 ENCERRAR AVALIAÇÃO
+// ════════════════════════════════════════════════════════════════
+
+function closeLeader(payload) {
+  try {
+    const code = payload.leaderCode;
+    if (!code) return { ok: false, error: 'Código não informado' };
+    
+    const sheet = getLeadersSheet();
+    const data = sheet.getDataRange().getValues();
+    
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][0] === code) {
+        sheet.getRange(i + 1, 11).setValue('closed'); // Coluna 11 = Status
+        logAction('closeLeader', { code: code }, 'OK');
+        return { ok: true };
+      }
+    }
+    
+    return { ok: false, error: 'Líder não encontrado' };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+}
+
+// ════════════════════════════════════════════════════════════════
+// 📧 EMAILS — BOAS-VINDAS, NOTIFICAÇÃO E RELATÓRIO
+// ════════════════════════════════════════════════════════════════
+
+/**
+ * 🎉 Email de boas-vindas após cadastro
+ */
+function sendWelcomeEmail(leader) {
+  const subject = `🙏 Bem-vindo(a) ao Discipulado 360° Plenitude IEC™, ${leader.name}!`;
+  const evaluatorLink = `https://amavroger-hue.github.io/Avaliador2/?codigo=${leader.code}`;
+  
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f4f9ff; padding: 20px;">
+      <div style="background: linear-gradient(135deg, #0b4aa2, #062b62); color: #fff; padding: 36px 30px; border-radius: 14px; text-align: center;">
+        <div style="background: rgba(56,189,248,0.25); display: inline-block; padding: 6px 16px; border-radius: 999px; font-size: 11px; font-weight: bold; letter-spacing: 0.15em; margin-bottom: 14px;">CADASTRO CONFIRMADO</div>
+        <h1 style="margin: 0 0 8px; font-size: 28px;">🎉 Bem-vindo(a)!</h1>
+        <p style="margin: 0; opacity: 0.95; font-size: 16px;">Discipulado 360° Plenitude IEC™</p>
+      </div>
+
+      <div style="background: #fff; padding: 30px; border-radius: 14px; margin-top: 16px; box-shadow: 0 6px 18px rgba(0,0,0,0.08);">
+        <p style="font-size: 16px; color: #475569; line-height: 1.7;">Olá, <strong>${leader.name}</strong>!</p>
+        
+        <p style="color: #475569; line-height: 1.7; font-size: 15px;">
+          🙌 Que alegria ter você nessa jornada! Seu cadastro foi <strong>concluído com sucesso</strong> e sua autoavaliação foi registrada.
+        </p>
+
+        <div style="background: linear-gradient(135deg, #063b7a, #0b63ce); color: #fff; padding: 24px; border-radius: 12px; text-align: center; margin: 20px 0;">
+          <p style="margin: 0 0 6px; font-size: 12px; letter-spacing: 0.15em; opacity: 0.9;">SEU CÓDIGO ÚNICO</p>
+          <p style="margin: 0 0 12px; font-size: 32px; font-weight: bold; letter-spacing: 0.1em;">${leader.code}</p>
+          <p style="margin: 0; font-size: 13px; opacity: 0.9; word-break: break-all;">${evaluatorLink}</p>
+        </div>
+
+        <h3 style="color: #063b7a; font-size: 17px; margin: 24px 0 12px;">📋 Próximos passos:</h3>
+        <ol style="color: #475569; line-height: 1.9; font-size: 14px; padding-left: 22px;">
+          <li><strong>Compartilhe o link acima</strong> com seu superior, pares e liderados</li>
+          <li>Aguarde no mínimo <strong>${MIN_EVALUATORS} avaliadores</strong> responderem</li>
+          <li>Acesse seu painel a qualquer momento usando seu <strong>e-mail + PIN</strong></li>
+          <li>Quando estiver pronto, gere seu <strong>Relatório Executivo em PDF</strong></li>
+        </ol>
+
+        <div style="background: #fef3c7; border-left: 4px solid #d97706; padding: 16px; border-radius: 8px; margin: 24px 0;">
+          <p style="margin: 0; color: #78350f; font-size: 14px; line-height: 1.7;">
+            <strong>🔐 Seu PIN:</strong> aquele que você criou no cadastro. Guarde com carinho — você usará para acessar seu painel sempre que quiser!
+          </p>
+        </div>
+
+        <blockquote style="border-left: 4px solid #0b63ce; padding: 14px 20px; margin: 24px 0; background: #f4f9ff; font-style: italic; color: #063b7a; border-radius: 8px;">
+          "Como o ferro com ferro se afia, assim o homem afia o seu próximo."
+          <br><span style="font-size: 12px; font-style: normal; color: #64748b; font-weight: 700;">— Provérbios 27:17</span>
+        </blockquote>
+
+        <p style="color: #475569; line-height: 1.7; font-size: 15px; margin-top: 24px;">
+          Que Deus o(a) abençoe ricamente nessa jornada de autoconhecimento e crescimento ministerial! 🙏
+        </p>
+      </div>
+
+      <div style="text-align: center; margin-top: 16px; color: #64748b; font-size: 12px;">
+        <p style="margin: 0; font-weight: bold;">Pr. Roger — amavroger@gmail.com</p>
+        <p style="margin: 4px 0 0;">✨ Plenitude IEC™ | Discipulado 360°</p>
+        <p style="margin: 4px 0 0; font-style: italic;">Onde a Inteligência Emocional encontra a Palavra</p>
+      </div>
+    </div>
+  `;
+
+  MailApp.sendEmail({
+    to: leader.email,
+    bcc: ADMIN_EMAIL,
+    subject: subject,
+    htmlBody: html
+  });
+}
+
+/**
+ * 📬 Notifica o líder quando recebe nova avaliação
+ */
+function notifyLeaderNewEvaluation(leaderEmail, leaderName, count) {
+  if (!leaderEmail) return;
+  
+  let statusMsg = '';
+  let statusColor = '#f59e0b';
+  let canGenerate = false;
+  
+  if (count >= MIN_EVALUATORS) {
+    statusMsg = `✅ Você já pode gerar seu Relatório Executivo!`;
+    statusColor = '#10b981';
+    canGenerate = true;
+  } else {
+    const faltam = MIN_EVALUATORS - count;
+    statusMsg = `⏳ Faltam ${faltam} avaliador(es) para o mínimo de ${MIN_EVALUATORS}.`;
+  }
+  
+  const subject = `📊 Nova avaliação recebida! (${count}/${MAX_EVALUATORS}) — Plenitude IEC™`;
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f4f9ff; padding: 20px;">
+      <div style="background: linear-gradient(135deg, #0b4aa2, #062b62); color: #fff; padding: 30px; border-radius: 14px; text-align: center;">
+        <h1 style="margin: 0 0 8px; font-size: 24px;">📊 Nova Avaliação Recebida!</h1>
+        <p style="margin: 0; opacity: 0.95;">Discipulado 360° Plenitude IEC™</p>
+      </div>
+
+      <div style="background: #fff; padding: 30px; border-radius: 14px; margin-top: 16px; box-shadow: 0 6px 18px rgba(0,0,0,0.08);">
+        <p style="font-size: 16px; color: #475569;">Olá, <strong>${leaderName}</strong>!</p>
+        
+        <p style="color: #475569; line-height: 1.7;">
+          🎉 <strong>Boas notícias!</strong> Você acabou de receber uma nova avaliação anônima.
+        </p>
+
+        <div style="background: ${statusColor}; color: #fff; padding: 24px; border-radius: 12px; text-align: center; margin: 20px 0;">
+          <p style="margin: 0 0 8px; font-size: 14px; opacity: 0.9;">TOTAL DE AVALIAÇÕES</p>
+          <p style="margin: 0; font-size: 42px; font-weight: bold;">${count}/${MAX_EVALUATORS}</p>
+          <p style="margin: 8px 0 0; font-size: 14px;">${statusMsg}</p>
+        </div>
+
+        ${canGenerate ? `
+        <div style="background: #ecfdf5; border-left: 4px solid #10b981; padding: 16px; border-radius: 8px; margin: 20px 0;">
+          <p style="margin: 0; color: #065f46; font-size: 14px; line-height: 1.7;">
+            <strong>🚀 Pronto para gerar!</strong> Acesse seu painel agora mesmo e clique em "Gerar Relatório PDF". Você receberá o relatório completo por email automaticamente!
+          </p>
+        </div>
+        ` : `
+        <div style="background: #fef3c7; border-left: 4px solid #d97706; padding: 16px; border-radius: 8px; margin: 20px 0;">
+          <p style="margin: 0; color: #78350f; font-size: 14px; line-height: 1.7;">
+            <strong>💡 Continue compartilhando!</strong> Quanto mais avaliadores, mais rica será sua análise 360°. Você pode receber até ${MAX_EVALUATORS} avaliações.
+          </p>
+        </div>
+        `}
+
+        <p style="color: #475569; line-height: 1.7; margin-top: 20px;">
+          Que Deus continue te abençoando nessa jornada! 🙏
+        </p>
+      </div>
+
+      <div style="text-align: center; margin-top: 16px; color: #64748b; font-size: 12px;">
+        <p style="margin: 0; font-weight: bold;">Pr. Roger — amavroger@gmail.com</p>
+        <p style="margin: 4px 0 0;">✨ Plenitude IEC™ | Discipulado 360°</p>
+      </div>
+    </div>
+  `;
+
+  MailApp.sendEmail({
+    to: leaderEmail,
+    subject: subject,
+    htmlBody: html
+  });
+}
+
+/**
+ * 📧 ENVIAR RELATÓRIO PDF POR EMAIL (NOVO!)
+ * Recebe o PDF em base64 do front-end e envia como anexo
+ */
+function sendReportEmail(payload) {
+  try {
+    const { leaderCode, email, name, pdfBase64, filename, evaluatorCount } = payload;
+    
+    if (!email || !pdfBase64 || !name) {
+      return { ok: false, error: 'Dados incompletos para envio' };
+    }
+
+    // Decodifica base64 e cria blob do PDF
+    const decoded = Utilities.base64Decode(pdfBase64);
+    const blob = Utilities.newBlob(
+      decoded,
+      'application/pdf',
+      filename || `Relatorio_${leaderCode}.pdf`
+    );
+
+    const subject = `🎉 Plenitude IEC™ — Seu Relatório Executivo está pronto, ${name}!`;
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f4f9ff; padding: 20px;">
+        <div style="background: linear-gradient(135deg, #0b4aa2, #062b62); color: #fff; padding: 36px 30px; border-radius: 14px; text-align: center;">
+          <div style="background: rgba(56,189,248,0.25); display: inline-block; padding: 6px 16px; border-radius: 999px; font-size: 11px; font-weight: bold; letter-spacing: 0.15em; margin-bottom: 14px;">RELATÓRIO PRONTO</div>
+          <h1 style="margin: 0 0 8px; font-size: 28px;">📊 Seu Relatório Executivo</h1>
+          <p style="margin: 0; opacity: 0.95; font-size: 16px;">Discipulado 360° Plenitude IEC™</p>
+        </div>
+
+        <div style="background: #fff; padding: 30px; border-radius: 14px; margin-top: 16px; box-shadow: 0 6px 18px rgba(0,0,0,0.08);">
+          <p style="font-size: 16px; color: #475569; line-height: 1.7;">Olá, <strong>${name}</strong>!</p>
+          
+          <p style="color: #475569; line-height: 1.7; font-size: 15px;">
+            🙌 <strong>Que alegria!</strong> Seu Relatório Executivo de Discipulado 360° está pronto e segue em <strong>anexo</strong> neste e-mail.
+          </p>
+          
+          <div style="background: linear-gradient(135deg, #f4f9ff, #e6eefc); border-left: 5px solid #0b63ce; padding: 18px; border-radius: 10px; margin: 20px 0;">
+            <p style="margin: 0 0 8px; color: #063b7a; font-weight: bold; font-size: 15px;">📋 Resumo da sua avaliação:</p>
+            <p style="margin: 0; color: #475569; font-size: 14px; line-height: 1.7;">
+              • <strong>Avaliadores que responderam:</strong> ${evaluatorCount || 0}<br>
+              • <strong>Código:</strong> ${leaderCode}<br>
+              • <strong>Data de geração:</strong> ${Utilities.formatDate(new Date(), 'America/Sao_Paulo', 'dd/MM/yyyy HH:mm')}
+            </p>
+          </div>
+
+          <h3 style="color: #063b7a; font-size: 17px; margin: 24px 0 12px;">📖 O que você vai encontrar no relatório:</h3>
+          <ul style="color: #475569; line-height: 1.9; font-size: 14px; padding-left: 22px;">
+            <li><strong>Score Executivo</strong> (0-100) e nível de maturidade</li>
+            <li><strong>Análise dos 3 Pilares Cruciformes</strong> (Caráter, Competência, Comunhão)</li>
+            <li><strong>Gráficos visuais</strong> Doughnut, Radar e Polar</li>
+            <li><strong>As 8 Competências</strong> detalhadas individualmente</li>
+            <li><strong>TOP 3 Forças</strong> e <strong>TOP 3 Pontos a Desenvolver</strong></li>
+            <li><strong>PDI</strong> — Plano de Desenvolvimento de 90 dias personalizado</li>
+            <li><strong>Reflexões consolidadas</strong> suas e dos avaliadores</li>
+          </ul>
+
+          <div style="background: #fef3c7; border-left: 4px solid #d97706; padding: 16px; border-radius: 8px; margin: 24px 0;">
+            <p style="margin: 0; color: #78350f; font-size: 14px; line-height: 1.7;">
+              <strong>💡 Dica:</strong> Reserve um momento de oração antes de ler o relatório. Receba os insights com humildade, à luz da Palavra. Que Deus use cada página para sua transformação!
+            </p>
+          </div>
+
+          <blockquote style="border-left: 4px solid #0b63ce; padding: 14px 20px; margin: 24px 0; background: #f4f9ff; font-style: italic; color: #063b7a; border-radius: 8px;">
+            "Antes, seguindo a verdade em amor, cresçamos em tudo naquele que é a cabeça, Cristo."
+            <br><span style="font-size: 12px; font-style: normal; color: #64748b; font-weight: 700;">— Efésios 4:15</span>
+          </blockquote>
+
+          <p style="color: #475569; line-height: 1.7; font-size: 15px; margin-top: 24px;">
+            Que o Senhor o(a) abençoe ricamente nessa jornada de discipulado! 🙏
+          </p>
+        </div>
+
+        <div style="text-align: center; margin-top: 16px; color: #64748b; font-size: 12px;">
+          <p style="margin: 0; font-weight: bold;">Pr. Roger — amavroger@gmail.com</p>
+          <p style="margin: 4px 0 0;">✨ Plenitude IEC™ | Discipulado 360°</p>
+          <p style="margin: 4px 0 0; font-style: italic;">Onde a Inteligência Emocional encontra a Palavra</p>
+        </div>
+      </div>
+    `;
+
+    MailApp.sendEmail({
+      to: email,
+      bcc: ADMIN_EMAIL,
+      subject: subject,
+      htmlBody: html,
+      attachments: [blob]
+    });
+
+    logAction('sendReportEmail', { 
+      code: leaderCode, 
+      email: email, 
+      count: evaluatorCount,
+      filename: filename
+    }, 'OK');
+    
+    return { ok: true, message: 'Email enviado com sucesso' };
+    
+  } catch (err) {
+    Logger.log('Erro sendReportEmail: ' + err.message);
+    logAction('sendReportEmail', { error: err.message }, 'ERRO');
+    return { ok: false, error: err.message };
+  }
+}
+
+// ════════════════════════════════════════════════════════════════
+// 🧪 FUNÇÕES DE TESTE (use no editor para validar)
+// ════════════════════════════════════════════════════════════════
+
+function testPing() {
+  Logger.log(doGet({ parameter: { action: 'ping', apiKey: API_KEY } }).getContent());
+}
+
+function testCreateSheets() {
+  getLeadersSheet();
+  getEvaluationsSheet();
+  getLogsSheet();
+  Logger.log('✅ Planilhas criadas/verificadas com sucesso!');
+}
+
+function testSendEmail() {
+  // Teste de envio de email simples (sem PDF)
+  MailApp.sendEmail({
+    to: ADMIN_EMAIL,
+    subject: '🧪 Teste Plenitude IEC™ — Backend OK',
+    htmlBody: '<h2>✅ Backend funcionando!</h2><p>Se você recebeu este email, o sistema está pronto para enviar relatórios automaticamente.</p>'
+  });
+  Logger.log('✅ Email de teste enviado!');
+}
